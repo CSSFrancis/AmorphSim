@@ -35,8 +35,8 @@ class TestSimulationCube(TestCase):
     def test_4dStem(self):
         cube = SimulationCube()
         cube.add_random_clusters(5000)
-        cube.plot_symmetries()
-        stem = cube.get_4d_stem()
+        #cube.plot_symmetries()
+        stem = cube.get_4d_stem(noise=200,convolve=True)
         stem.plot()
         plt.show()
 

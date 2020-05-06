@@ -53,7 +53,6 @@ class SimulationCube(object):
         rand_k = random(num_clusters) * (k_range[1] - k_range[0]) + k_range[0]
         rand_sym = choice(symmetry,num_clusters)
         rand_pos = np.multiply(random((num_clusters,3)), self.dimensions)
-        print(np.shape(rand_pos))
         if random_rotation:
             rand_vector = random((num_clusters,3))*2-1
             rand_rot = random(num_clusters)*np.pi
@@ -103,7 +102,6 @@ class SimulationCube(object):
         colors = ["black","blue","red","green","yellow","red","orange", "purple"]
         for cluster in self.clusters:
             inten = np.mean(cluster.get_intensity())
-            print(colors[symmetries.index(cluster.symmetry)])
             c = Circle((cluster.position[0],
                         cluster.position[1]),
                         radius=cluster.radius,
@@ -114,7 +112,8 @@ class SimulationCube(object):
         return
 
     def get_4d_stem(self, convergence_angle=.74, accelerating_voltage=200,
-                    k_rad = 5.0, simulation_size=(50, 50, 128, 128), poisson=False):
+                    k_rad = 5.0, simulation_size=(50, 50, 128, 128),
+                    noise = None, convolve=False, beam_size=None):
         """Returns an amorphous2d object which shows the 4d STEM projection for some set of clusters along some
         illumination
 
@@ -149,7 +148,21 @@ class SimulationCube(object):
                 inner_r, outer_r = np.meshgrid(sr, rr)
                 inner_c, outer_c = np.meshgrid(sc, rc)
                 dataset[(outer_c.flatten(), outer_r.flatten(), inner_c.flatten(), inner_r.flatten())] = inten + dataset[(outer_c.flatten(), outer_r.flatten(), inner_c.flatten(), inner_r.flatten())]
-        dataset =Signal2D(dataset)
+        if noise is not None:
+            dataset = dataset + np.random.random(simulation_size)*noise
+        dataset = Signal2D(dataset)
+        if convolve:
+            if beam_size is None:
+                beam_size = .9/convergence_angle  # rough calculation
+            from scipy.signal import convolve2d
+            num_pixels = int(real_scale*beam_size)
+            xx,yy= np.ogrid[-num_pixels-1:num_pixels+2,-num_pixels-1:num_pixels+2]
+            kernel =1 - ((xx ** 2 + yy ** 2) ** .5 - num_pixels).clip(0,1)
+            dataset = dataset.T
+            dataset.map(convolve2d, in2=kernel, mode="same", inplace=True)
+            dataset = dataset.T
+
+
         dataset.axes_manager.navigation_axes[0].scale = self.dimensions[0]/simulation_size[0]
         dataset.axes_manager.navigation_axes[1].scale = self.dimensions[1] / simulation_size[1]
         dataset.axes_manager.navigation_axes[0].units = "nm"
