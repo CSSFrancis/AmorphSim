@@ -54,16 +54,17 @@ class SimulationCube(object):
         rand_sym = choice(symmetry,num_clusters)
         rand_pos = np.multiply(random((num_clusters,3)), self.dimensions)
         if random_rotation:
-            rand_vector = random((num_clusters,3))*2-1
+            rand_vector = random((num_clusters,3))*2 -1  # change
             rand_rot = random(num_clusters)*np.pi
         else:
             rand_vector = [1,0,0]
             rand_rot = 0
+            print(len(rand_rot))
         for s, r, k, p, v, a in zip(rand_sym,rand_r, rand_k,rand_pos, rand_vector, rand_rot):
             self.clusters.append(Cluster(s,r,k,p,v,a))
         return
 
-    def show_projection(self, accelerating_voltage=200, size=(512,512)):
+    def show_projection(self, accelerating_voltage=200, size=(512,512), acceptance = None):
         """Plots the 2-d projection.  Creates a 2-D projection of the clusters in the amorphous matrix.
 
         Parameters:
@@ -77,6 +78,9 @@ class SimulationCube(object):
         projection = np.zeros(size)
         scale = [self.dimensions[0]/size[0],self.dimensions[1]/size[1]]
         for cluster in self.clusters:
+            if acceptance is not None:
+                if abs(cluster.get_mistilt()) > acceptance:
+                    next()
             inten = np.sum(cluster.get_intensity())
             r, c = circle(cluster.position[0]/scale[0],
                           cluster.position[1]/scale[1],
@@ -85,7 +89,7 @@ class SimulationCube(object):
             projection[r, c] = inten + projection[r, c]
         return projection
 
-    def plot_symmetries(self, symmetries=[2, 4, 6, 8, 10], norm=200):
+    def plot_symmetries(self, symmetries=[2, 4, 6, 8, 10], norm=200,acceptance=None):
         """Plots the 2-d projection of the symmetries as circles
 
         Parameters:
@@ -101,6 +105,11 @@ class SimulationCube(object):
         ax.set_ylim(0,self.dimensions[1])
         colors = ["black","blue","red","green","yellow","red","orange", "purple"]
         for cluster in self.clusters:
+            if acceptance is not None:
+                print(abs(cluster.get_mistilt()))
+                if abs(cluster.get_mistilt()) > acceptance:
+                    continue
+            print("here")
             inten = np.mean(cluster.get_intensity())
             c = Circle((cluster.position[0],
                         cluster.position[1]),
@@ -108,6 +117,11 @@ class SimulationCube(object):
                         alpha=inten/norm,
                         color=colors[symmetries.index(cluster.symmetry)])
             ax.add_patch(c)
+        from matplotlib.lines import Line2D
+        leg = [Line2D([0], [0], marker='o', color=colors[i], label=str(sym)+" fold symmetry",
+               markerfacecolor=colors[i], markersize=15) for i,sym in enumerate(symmetries)]
+
+        ax.legend(handles=leg)
         plt.show()
         return
 
@@ -255,3 +269,9 @@ class Cluster(object):
         observed_intensity = [self.diffraction_intensity/self.symmetry * _shape_function(radius=self.radius, deviation=dev)
                               for dev in deviation]
         return observed_intensity
+
+    def get_mistilt(self, v2=[1,1,1]):
+        v1 = self.rotation_vector
+        print(v1)
+        return np.cos((v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])/(np.linalg.norm(v1)*np.linalg.norm(v2)))
+

@@ -32,6 +32,12 @@ class TestSimulationCube(TestCase):
         cube.add_random_clusters(1000)
         projection = cube.plot_symmetries()
 
+    def test_symmetry_projection_acceptance(self):
+        cube = SimulationCube()
+        cube.add_random_clusters(1000)
+        projection = cube.plot_symmetries(acceptance=np.pi/8)
+        #projection = cube.plot_symmetries(acceptance=np.pi / 2)
+
     def test_4dStem(self):
         cube = SimulationCube()
         cube.add_random_clusters(5000)

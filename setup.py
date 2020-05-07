@@ -6,7 +6,7 @@ here = path.abspath(path.dirname(__file__))
 
 
 def readme():
-    with open('README.rst') as f:
+    with open('README.md') as f:
         return f.read()
 
 
@@ -25,5 +25,5 @@ setup(name='AmorphSim',
                         'numpy>=1.10,!=1.70.0',
                         'matplotlib',
                         'scipy',
-                        'skimage'],
+                        'scikit-image'],
       zip_safe=False)
