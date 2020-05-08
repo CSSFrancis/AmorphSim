@@ -1,4 +1,6 @@
 import numpy as np
+import hyperspy.api as hs
+
 
 def _get_speckle_intensity(k_vector, ewald_sphere_rad, disorder=None, beam_direction=[0,0,1]):
     """Returns the intensity of some speckle out of one
@@ -21,8 +23,8 @@ def _get_speckle_intensity(k_vector, ewald_sphere_rad, disorder=None, beam_direc
     deviation = _get_deviation(ewald_sphere_rad, k_vector,beam_direction=beam_direction)
     observed_intensity =_shape_function(radius=ewald_sphere_rad, deviation=deviation)
     if disorder is not None:
-        _get_disorder(k_vector,disorder)
-        observed_intensity
+        factor = _get_disorder(k_vector,disorder)
+        observed_intensity = observed_intensity*factor
     return observed_intensity
 
 def _shape_function(radius, deviation, function=None):
@@ -111,7 +113,7 @@ def _get_wavelength(acc_voltage):
     return wavelength
 
 
-def _get_deviation(sphere_radius,k, beam_direction=[0,0,-1]):
+def _get_deviation(sphere_radius, k, beam_direction=[0,0,-1]):
     """
     Parameters
     ----------------
@@ -125,9 +127,9 @@ def _get_deviation(sphere_radius,k, beam_direction=[0,0,-1]):
     deviation = sphere_radius-dist # distance from edge of sphere to k
     return deviation
 
-def _get_disorder(k,displacement):
-    """
-    The estimates the amount of disorder in the perfect crystal.
+def _get_disorder(k, displacement):
+    """The estimates the amount of disorder in the perfect crystal.
+    This might need some additional work.
 
     Parameters
     ----------------

@@ -2,8 +2,9 @@ import numpy as np
 import hyperspy.api as hs
 from hyperspy._signals.signal2d import Signal2D
 
-from AmorphSim.utils.rotation_utils import _get_rotation_matrix,  _get_deviation, _get_random_2d_rot, _get_random_3d_rot
-from AmorphSim.utils.simulation_utils import _get_speckle_size, _get_wavelength, _shape_function
+from AmorphSim.utils.rotation_utils import _get_rotation_matrix, _get_random_2d_rot, _get_random_3d_rot
+from AmorphSim.utils.simulation_utils import _get_speckle_size, _get_wavelength, _shape_function, _get_speckle_intensity
+from AmorphSim.utils.simulation_utils import _get_deviation
 from skimage.draw import circle
 from skimage.filters import gaussian
 from numpy.random import random, choice
@@ -190,8 +191,10 @@ class SimulationCube(object):
 
 
 class Cluster(object):
-    def __init__(self, symmetry=10, radius=1, k=4.0, position=random(2),
-                 rotation_2d=np.eye(3), rotation_3d=np.eye(3), diffraction_intensity=600):
+    def __init__(self, symmetry=10, radius=1, k=4.0,
+                 position=random(2), rotation_2d=np.eye(3),
+                 rotation_3d=np.eye(3), diffraction_intensity=600,
+                 disorder=None):
         """Defines a cluster with a symmetry of symmetry, a radius of radius in nm and position of position.
 
         Parameters:
@@ -214,18 +217,16 @@ class Cluster(object):
         self.rotation_3d = rotation_3d
         self.k = k
         self.diffraction_intensity = diffraction_intensity
+        self.disorder=disorder
+        self.beam_direction = [0,0,1]
 
     def get_diffraction(self, img_size=8.0, num_pixels=512, accelerating_voltage=200, conv_angle=0.6):
         """Takes some image size in inverse nm and then plots the resulting
         """
         sphere_radius = 1/_get_wavelength(accelerating_voltage)
         scale = (num_pixels-1)/img_size
-        angle = (2 * np.pi) / self.symmetry  # angle between speckles on the pattern
-        k = [[np.cos(angle * i) * self.k, np.sin(angle * i) * self.k,0] for i in
-             range(self.symmetry)]  # vectors for the speckles perp to BA
-        k_rotated2d = [np.dot(self.rotation_2d, speckle) for speckle in k]
-        k_rotated = [np.dot(self.rotation_3d, speckle) for speckle in k_rotated2d]
-        deviation = [_get_deviation(sphere_radius,speckle) for speckle in k_rotated]
+        k_rotated=self.get_k_vectors()
+        deviation = [_get_deviation(sphere_radius ,speckle) for speckle in k_rotated]
         observed_intensity = [self.diffraction_intensity/self.symmetry * _shape_function(radius=self.radius, deviation=dev)
                               for dev in deviation]
         radius = _get_speckle_size(accelerating_voltage, conv_angle)*scale
@@ -245,22 +246,33 @@ class Cluster(object):
         k_rotated = [np.dot(self.rotation_3d, speckle) for speckle in k_rotated2d]
         return k_rotated
 
-    def get_speckles(self, img_size=8.0, num_pixels=512, accelerating_voltage=200, conv_angle=0.6, shape=(128,128)):
-        """Takes some image size in inverse nm and then plots the resulting
+    def get_speckles(self, img_size=10.0, num_pixels=128, accelerating_voltage=200, conv_angle=0.6,):
+        """
+        This function returns the diffraction speckles as circles as defined by the
+        skimage.draw.Circle class. Each speckle also has some intensity associated with it.
+
+        Parameters
+        -----------
+        img_size:
+            The real size of the image that is being projected onto. (In inverse nm)
+        num_pixels:
+            The pixelated size of the image being projected onto.
+        accelerating_voltage:
+            The accelerating volatage for getting the ewald sphere radius
+        conv_angle:
+            The convergance angle in mrad for beam.
         """
         sphere_radius = 1/_get_wavelength(accelerating_voltage)
         scale = (num_pixels-1)/img_size
-        angle = (2 * np.pi) / self.symmetry  # angle between speckles on the pattern
-        k = [[np.cos(angle * i) * self.k, np.sin(angle * i) * self.k,0] for i in
-             range(self.symmetry)]  # vectors for the speckles perp to BA
-        k_rotated2d = [np.dot(self.rotation_2d, speckle) for speckle in k]
-        k_rotated = [np.dot(self.rotation_3d, speckle) for speckle in k_rotated2d]
-        deviation = [_get_deviation(sphere_radius,speckle) for speckle in k_rotated]
-        observed_intensity = [self.diffraction_intensity/self.symmetry * _shape_function(radius=self.radius, deviation=dev)
-                              for dev in deviation]
+        k_rotated = self.get_k_vectors()
+        observed_intensity = [_get_speckle_intensity(k_vector=k,
+                                                     ewald_sphere_rad=sphere_radius,
+                                                     disorder=self.disorder,
+                                                     beam_direction=self.beam_direction)
+                              for k in k_rotated]
         radius = _get_speckle_size(accelerating_voltage, conv_angle)*scale
         speckles = [circle(int(k1[0] * scale + num_pixels/2), int(k1[1] * scale + num_pixels/2),
-                           radius=radius, shape=shape) for k1 in k_rotated]
+                           radius=radius, shape=(num_pixels,num_pixels)) for k1 in k_rotated]
         return speckles, observed_intensity
 
     def get_intensity(self,accelerating_voltage=200):
