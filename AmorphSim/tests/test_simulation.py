@@ -3,11 +3,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import hyperspy.api as hs
 from AmorphSim.sim import Cluster, SimulationCube
+from AmorphSim.utils.rotation_utils import _rand_2d_rotation_matrix
 
 
 class TestCluster(TestCase):
     def setUp(self):
-        self.c = Cluster(symmetry=10,radius=.5, k=4.0, position=(1,1), rotation_vector=[0.707,.707 , 0], rotation_angle=np.pi/3)
+        self.c = Cluster(symmetry=10,radius=.5, k=4.0, position=(1,1))
+
+    def test_get_k_vectors(self):
+
+        self.c.rotation_2d = _rand_2d_rotation_matrix()
+        print(self.c.rotation_2d)
+        k = np.array(self.c.get_k_vectors())
+        plt.scatter(k[:,0], k[:,1])
+        plt.show()
 
     def test_get_diffraciton(self):
         diff = self.c.get_diffraction(img_size=15.0)
@@ -40,9 +49,9 @@ class TestSimulationCube(TestCase):
 
     def test_4dStem(self):
         cube = SimulationCube()
-        cube.add_random_clusters(5000)
+        cube.add_random_clusters(100)
         #cube.plot_symmetries()
-        stem = cube.get_4d_stem(noise=200,convolve=True)
+        stem = cube.get_4d_stem(convolve=True)
         stem.plot()
         plt.show()
 

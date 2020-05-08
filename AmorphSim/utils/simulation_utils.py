@@ -1,5 +1,29 @@
 import numpy as np
 
+def _get_speckle_intensity(k_vector, ewald_sphere_rad, disorder=None, beam_direction=[0,0,1]):
+    """Returns the intensity of some speckle out of one
+
+    Parameters
+    --------------
+    k_vector:
+        The vector for one of the diffraction spots
+    ewald_sphere_rad:
+        The radius of the Ewald Sphere.  This is equal to 1/wavelength
+    disorder: None or float
+        The amount of disorder in the glass.  This is a measure of the average
+        displacement of some atom from ideality.
+    :returns
+    -----------
+    observed_intensity:
+        The intensity for some diffraction vector
+    :return:
+    """
+    deviation = _get_deviation(ewald_sphere_rad, k_vector,beam_direction=beam_direction)
+    observed_intensity =_shape_function(radius=ewald_sphere_rad, deviation=deviation)
+    if disorder is not None:
+        _get_disorder(k_vector,disorder)
+        observed_intensity
+    return observed_intensity
 
 def _shape_function(radius, deviation, function=None):
     """Returns the point at some deviation parameter s and a radius r
@@ -85,3 +109,34 @@ def _get_wavelength(acc_voltage):
     e = 1.602*10**-19
     wavelength = h/np.sqrt(2*m0*acc_voltage*1000*e*(1+acc_voltage/(2*511)))*10**9
     return wavelength
+
+
+def _get_deviation(sphere_radius,k, beam_direction=[0,0,-1]):
+    """
+    Parameters
+    ----------------
+    sphere_radius: float
+        The radius of the sphere
+    k0: tuple
+        The (x,y,z) of the original s value from the optic axis.
+    """
+    beam = np.array(beam_direction) * sphere_radius
+    dist = np.linalg.norm(beam-k)
+    deviation = sphere_radius-dist # distance from edge of sphere to k
+    return deviation
+
+def _get_disorder(k,displacement):
+    """
+    The estimates the amount of disorder in the perfect crystal.
+
+    Parameters
+    ----------------
+    sphere_radius: float
+        The radius of the sphere
+    k: tuple
+        The (x,y,z) of the original s value from the optic axis.
+    """
+    b = 8 * np.pi**2 * displacement**2
+    s = np.linalg.norm(k)
+    factor = np.exp(-b*s**2)
+    return factor

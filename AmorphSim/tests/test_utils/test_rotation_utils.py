@@ -1,20 +1,40 @@
 from unittest import TestCase
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-from AmorphSim.utils.rotation_utils import _get_rotation_matrix, _get_deviation, _get_wavelength,_shape_function
+from AmorphSim.utils.rotation_utils import _get_rotation_matrix, _get_deviation, _get_random_rotation, rand_rotation_matrix
+
+
 
 
 class TestRotUtils(TestCase):
+
+    def test_get_random_rotation(self):
+        rot, angles = _get_random_rotation(100)
+        self.assertAlmostEqual(max(np.linalg.norm(rot,axis=1)), 1)
+        self.assertAlmostEqual(min(np.linalg.norm(rot,axis=1)), 1)
+        #fig = plt.figure()
+        #ax = fig.add_subplot(111, projection='3d')
+        #ax.scatter(rot[:,0],rot[:,1],rot[:,2])
+        #plt.show()
+
+    def test_random_rot_mat(self):
+        rot = []
+        for i in range(0,2000):
+            M = rand_rotation_matrix(1.0)
+            rot.append(M.dot([0,0,1]))
+        rot= np.array(rot)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(rot[:,0],rot[:,1],rot[:,2])
+        plt.show()
 
     def test_get_rotation_matrix(self):
         matrix = _get_rotation_matrix(axis=(1,1,0),theta=np.pi/3)
         print(matrix)
         print(np.dot(matrix,[4,0,0]))
         print(np.dot(matrix, [-4, 0, 0]))
-
-    def test_get_wavelength(self):
-        self.assertAlmostEqual(_get_wavelength(200), 0.002508,4)
-        self.assertAlmostEqual(_get_wavelength(300), 0.0019687, 4)
 
     def test_get_deviation(self):
         sphere_rad = 1/_get_wavelength(200)
