@@ -2,7 +2,11 @@ import numpy as np
 import hyperspy.api as hs
 
 
-def _get_speckle_intensity(k_vector, ewald_sphere_rad, disorder=None, beam_direction=[0,0,1]):
+def _get_speckle_intensity(k_vector,
+                           ewald_sphere_rad,
+                           cluster_rad = 1.0,
+                           disorder=None,
+                           beam_direction=[0,0,1]):
     """Returns the intensity of some speckle out of one
 
     Parameters
@@ -20,8 +24,11 @@ def _get_speckle_intensity(k_vector, ewald_sphere_rad, disorder=None, beam_direc
         The intensity for some diffraction vector
     :return:
     """
-    deviation = _get_deviation(ewald_sphere_rad, k_vector,beam_direction=beam_direction)
-    observed_intensity =_shape_function(radius=ewald_sphere_rad, deviation=deviation)
+    deviation = _get_deviation(ewald_sphere_rad,
+                               k_vector,
+                               beam_direction=beam_direction)
+    observed_intensity =_shape_function(radius=cluster_rad,
+                                        deviation=deviation)
     if disorder is not None:
         factor = _get_disorder(k_vector,disorder)
         observed_intensity = observed_intensity*factor

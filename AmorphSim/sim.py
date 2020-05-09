@@ -60,7 +60,6 @@ class SimulationCube(object):
         else:
             rand_vector = [np.eye(3), ]*num_clusters
             rand_rot = [np.eye(3), ]*num_clusters
-            print(len(rand_rot))
         for s, r, k, p, two, three in zip(rand_sym,rand_r, rand_k,rand_pos, rot_2d, rot_3d):
             self.clusters.append(Cluster(s,r,k,p,two,three))
         return
@@ -126,7 +125,7 @@ class SimulationCube(object):
 
     def get_4d_stem(self, convergence_angle=.74, accelerating_voltage=200,
                     k_rad = 5.0, simulation_size=(50, 50, 128, 128),
-                    noise = None, convolve=False, beam_size=None):
+                    noise = False, disorder = None, num_electrons=1000, convolve=False, beam_size=None):
         """Returns an amorphous2d object which shows the 4d STEM projection for some set of clusters along some
         illumination
 
@@ -149,10 +148,11 @@ class SimulationCube(object):
         real_scale = simulation_size[0] / self.dimensions[0]
 
         for cluster in self.clusters:
-            speckles, observed_intensity = cluster.get_speckles(img_size=k_rad*2, num_pixels=simulation_size[2],
+            speckles, observed_intensity = cluster.get_speckles(img_size=k_rad*2,
+                                                                num_pixels=simulation_size[2],
                                                                 accelerating_voltage=accelerating_voltage,
                                                                 conv_angle=convergence_angle,
-                                                                shape=(simulation_size[2], simulation_size[3]))
+                                                                disorder=disorder)
 
             rr, rc = circle(r=cluster.position[0] * real_scale,
                             c=cluster.position[1] * real_scale,
@@ -161,9 +161,18 @@ class SimulationCube(object):
             for (sr,sc), inten in zip(speckles, observed_intensity):
                 inner_r, outer_r = np.meshgrid(sr, rr)
                 inner_c, outer_c = np.meshgrid(sc, rc)
-                dataset[(outer_c.flatten(), outer_r.flatten(), inner_c.flatten(), inner_r.flatten())] = inten + dataset[(outer_c.flatten(), outer_r.flatten(), inner_c.flatten(), inner_r.flatten())]
-        if noise is not None:
-            dataset = dataset + np.random.random(simulation_size)*noise
+                if noise:
+                    #print(np.size(inner_c))
+                    inten = np.random.poisson(inten*num_electrons,size=np.size(inner_c))
+                else:
+                    inten= inten* num_electrons
+                dataset[(outer_c.flatten(),
+                         outer_r.flatten(),
+                         inner_c.flatten(),
+                         inner_r.flatten())] = inten + dataset[(outer_c.flatten(),
+                                                                outer_r.flatten(),
+                                                                inner_c.flatten(),
+                                                                inner_r.flatten())]
         dataset = Signal2D(dataset)
         if convolve:
             if beam_size is None:
@@ -191,10 +200,13 @@ class SimulationCube(object):
 
 
 class Cluster(object):
-    def __init__(self, symmetry=10, radius=1, k=4.0,
-                 position=random(2), rotation_2d=np.eye(3),
-                 rotation_3d=np.eye(3), diffraction_intensity=600,
-                 disorder=None):
+    def __init__(self,
+                 symmetry=10,
+                 radius=1,
+                 k=4.0,
+                 position=random(2),
+                 rotation_2d=np.eye(3),
+                 rotation_3d=np.eye(3)):
         """Defines a cluster with a symmetry of symmetry, a radius of radius in nm and position of position.
 
         Parameters:
@@ -216,19 +228,24 @@ class Cluster(object):
         self.rotation_2d = rotation_2d
         self.rotation_3d = rotation_3d
         self.k = k
-        self.diffraction_intensity = diffraction_intensity
-        self.disorder=disorder
         self.beam_direction = [0,0,1]
 
-    def get_diffraction(self, img_size=8.0, num_pixels=512, accelerating_voltage=200, conv_angle=0.6):
+    def get_diffraction(self, img_size=8.0,
+                        num_pixels=512,
+                        accelerating_voltage=200,
+                        conv_angle=0.6,
+                        disorder=None):
         """Takes some image size in inverse nm and then plots the resulting
         """
         sphere_radius = 1/_get_wavelength(accelerating_voltage)
         scale = (num_pixels-1)/img_size
         k_rotated=self.get_k_vectors()
-        deviation = [_get_deviation(sphere_radius ,speckle) for speckle in k_rotated]
-        observed_intensity = [self.diffraction_intensity/self.symmetry * _shape_function(radius=self.radius, deviation=dev)
-                              for dev in deviation]
+        observed_intensity = [_get_speckle_intensity(k_vector=k,
+                                                     ewald_sphere_rad=sphere_radius,
+                                                     disorder=disorder,
+                                                     cluster_rad=self.radius,
+                                                     beam_direction=self.beam_direction)
+                              for k in k_rotated]
         radius = _get_speckle_size(accelerating_voltage, conv_angle)*scale
         circles = [circle(int(k1[0] * scale + num_pixels/2), int(k1[1] * scale + num_pixels/2),
                           radius=radius) for k1 in k_rotated]
@@ -246,7 +263,11 @@ class Cluster(object):
         k_rotated = [np.dot(self.rotation_3d, speckle) for speckle in k_rotated2d]
         return k_rotated
 
-    def get_speckles(self, img_size=10.0, num_pixels=128, accelerating_voltage=200, conv_angle=0.6,):
+    def get_speckles(self, img_size=10.0,
+                     num_pixels=128,
+                     accelerating_voltage=200,
+                     conv_angle=0.6,
+                     disorder=None):
         """
         This function returns the diffraction speckles as circles as defined by the
         skimage.draw.Circle class. Each speckle also has some intensity associated with it.
@@ -258,16 +279,17 @@ class Cluster(object):
         num_pixels:
             The pixelated size of the image being projected onto.
         accelerating_voltage:
-            The accelerating volatage for getting the ewald sphere radius
+            The accelerating voltage for getting the Ewald sphere radius
         conv_angle:
-            The convergance angle in mrad for beam.
+            The convergence angle in mrad for beam.
         """
         sphere_radius = 1/_get_wavelength(accelerating_voltage)
         scale = (num_pixels-1)/img_size
         k_rotated = self.get_k_vectors()
         observed_intensity = [_get_speckle_intensity(k_vector=k,
                                                      ewald_sphere_rad=sphere_radius,
-                                                     disorder=self.disorder,
+                                                     disorder=disorder,
+                                                     cluster_rad=self.radius,
                                                      beam_direction=self.beam_direction)
                               for k in k_rotated]
         radius = _get_speckle_size(accelerating_voltage, conv_angle)*scale
@@ -278,19 +300,15 @@ class Cluster(object):
     def get_intensity(self,accelerating_voltage=200):
         """Takes some image size in inverse nm and then plots the resulting
         """
-        rotation_matrix = _get_rotation_matrix(self.rotation_vector, self.rotation_angle)
-        sphere_radius = 1/_get_wavelength(accelerating_voltage)
-        angle = (2 * np.pi) / self.symmetry  # angle between speckles on the pattern
-        k = [[np.cos(angle * i) * self.k, np.sin(angle * i) * self.k,0] for i in
-             range(self.symmetry)]  # vectors for the speckles perp to BA
-        k_rotated = [np.dot(rotation_matrix, speckle) for speckle in k]
-        deviation = [_get_deviation(sphere_radius,speckle) for speckle in k_rotated]
-        observed_intensity = [self.diffraction_intensity/self.symmetry * _shape_function(radius=self.radius, deviation=dev)
-                              for dev in deviation]
+        sphere_radius = 1 / _get_wavelength(accelerating_voltage)
+        k_rotated = self.get_k_vectors()
+        observed_intensity = [_get_speckle_intensity(k_vector=k,
+                                                     ewald_sphere_rad=sphere_radius,
+                                                     disorder=self.disorder,
+                                                     cluster_rad=self.radius,
+                                                     beam_direction=self.beam_direction)
+                              for k in k_rotated]
         return observed_intensity
 
-    def get_angle_between(self, v2=[1,0,0]):
-        v1 = self.rotation_vector
-        print(v1)
-        return np.arccos(np.dot(v1, v2)/(np.linalg.norm(v1)*np.linalg.norm(v2)))
-
+    def get_angle_between(self):
+        return np.arccos((np.trace(self.rotation_3d)-1)/2)
