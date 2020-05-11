@@ -11,7 +11,7 @@ def readme():
 
 
 setup(name='AmorphSim',
-      version='0.01',
+      version='0.02',
       description='Tool for simulating amorphous Materials',
       long_description=readme(),
       keywords='Simulations STEM Electron Microscopy Glass',
