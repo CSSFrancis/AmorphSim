@@ -84,6 +84,35 @@ def s_g_kernel(kernel_size, d_hkl, cluster_size, voltage):
     k = hs.signals.Signal2D(data=kernel, axes=[dict0, dict1])
     return k
 
+def s_g_kernel_angle(kernel_size, d_hkl, cluster_size, voltage):
+    """ Simulates a 2-d projection of the s_g kernel... (Maybe make 3-D if useful)
+    Parameters
+    ----------------
+    kernel_size: int
+        The size of the kernel to create
+    d_hkl: float
+        The interplanar spacing in n,
+    cluster_size: float
+        The size of the cluster being calculated.
+    """
+    wavelength = _get_wavelength(acc_voltage=voltage)
+    ax = np.arange(-kernel_size // 2 + 1., kernel_size // 2 + 1.)
+    xx, yy = np.divide(np.meshgrid(ax, ax), kernel_size / 3 * cluster_size)
+    scaling = 1/(kernel_size / 3 * cluster_size)
+    sg = np.power((np.square(xx) + np.square(yy)), 0.5)
+    print(d_hkl)
+    dot = np.subtract(2*wavelength*d_hkl, np.multiply(sg, d_hkl))
+    angles = np.divide(sg, d_hkl)
+    sg_surf = np.multiply(sg, (2 * np.pi * cluster_size))
+    kernel = np.power(np.multiply(np.divide((np.sin(sg_surf) -
+                                             np.multiply(sg_surf,
+                                                         np.cos(sg_surf))),
+                                            np.power(sg_surf, 3)), 3), 2)
+    dict0 = {'size': kernel_size, 'name': 's_x', 'units': 'nm^-1', 'scale': scaling, 'offset': 0}
+    dict1 = {'size': kernel_size, 'name': 's_y', 'units': 'nm^-1', 'scale': scaling, 'offset': 0}
+    k = hs.signals.Signal2D(data=kernel, axes=[dict0, dict1])
+    return k
+
 
 def _get_speckle_size(accelerating_voltage=200, semi_angle= 0.74):
     """Gets the size of a speckle from the semi angle

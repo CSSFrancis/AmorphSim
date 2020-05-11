@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from AmorphSim.utils.rotation_utils import _get_rotation_matrix, _get_deviation, _get_random_rotation, rand_rotation_matrix
-
+from AmorphSim.utils.rotation_utils import _get_rotation_matrix,  _get_random_rotation
+from AmorphSim.utils.simulation_utils import _shape_function, s_g_kernel
 
 
 

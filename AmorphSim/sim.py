@@ -4,7 +4,7 @@ from hyperspy._signals.signal2d import Signal2D
 
 from AmorphSim.utils.rotation_utils import _get_rotation_matrix, _get_random_2d_rot, _get_random_3d_rot
 from AmorphSim.utils.simulation_utils import _get_speckle_size, _get_wavelength, _shape_function, _get_speckle_intensity
-from AmorphSim.utils.simulation_utils import _get_deviation
+from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors, build_ico
 from skimage.draw import circle
 from skimage.filters import gaussian
 from numpy.random import random, choice
@@ -58,10 +58,44 @@ class SimulationCube(object):
             rot_3d = _get_random_3d_rot(num_clusters)
             rot_2d = _get_random_2d_rot(num_clusters)
         else:
-            rand_vector = [np.eye(3), ]*num_clusters
-            rand_rot = [np.eye(3), ]*num_clusters
+            rot_2d = [np.eye(3), ]*num_clusters
+            rot_3d = [np.eye(3), ]*num_clusters
         for s, r, k, p, two, three in zip(rand_sym,rand_r, rand_k,rand_pos, rot_2d, rot_3d):
             self.clusters.append(Cluster(s,r,k,p,two,three))
+        return
+
+    def add_icoso(self, num_clusters, radius_range=(.5, 1.0), k_range=(3.5, 4.5), random_rotation=True):
+        """Randomly initializes the glass with a set of random clusters.
+        Parameters
+        ------------
+        num_clusters: int
+            The number of cluster to add
+        radius_range: tuple
+            The range of radii to randomly choose from
+        k_range: tuple
+            THe range of k to randomly choose from
+        random_rotation: bool
+            Random rotate the cluster or not
+        symmetry: list
+            The list of symmetries to choose from.  Acceptable symmetries are 2,4,6 and 10
+        """
+        rand_r = random(num_clusters) * (radius_range[1] - radius_range[0]) + radius_range[0]
+        rand_k = random(num_clusters) * (k_range[1] - k_range[0]) + k_range[0]
+        rand_pos = np.multiply(random((num_clusters,3)), self.dimensions)
+        if random_rotation:
+            rot_3d = _get_random_3d_rot(num_clusters)
+            rot_2d = _get_random_2d_rot(num_clusters)
+        else:
+            rot_2d = [np.eye(3), ]*num_clusters
+            rot_3d = [np.eye(3), ]*num_clusters
+        five_vertexes, three_face, two_edge = build_ico()
+        for r, k, p, two, three in zip(rand_r, rand_k,rand_pos, rot_2d, rot_3d):
+            for v in five_vertexes:
+                self.clusters.append(Cluster(10,r,k,p,two,three,plane_direction=v))
+            for v in three_face:
+                self.clusters.append(Cluster(6,r,k,p,two,three,plane_direction=v))
+            for v in two_edge:
+                self.clusters.append(Cluster(2, r, k, p, two, three, plane_direction=v))
         return
 
     def show_projection(self, size=(512,512), acceptance = None):
@@ -89,7 +123,7 @@ class SimulationCube(object):
             projection[r, c] = inten + projection[r, c]
         return projection
 
-    def plot_symmetries(self, symmetries=[2, 4, 6, 8, 10], norm=200,acceptance=None):
+    def plot_symmetries(self, symmetries=[2, 4, 6, 8, 10], norm=1,acceptance=None):
         """Plots the 2-d projection of the symmetries as circles
 
         Parameters:
@@ -206,7 +240,8 @@ class Cluster(object):
                  k=4.0,
                  position=random(2),
                  rotation_2d=np.eye(3),
-                 rotation_3d=np.eye(3)):
+                 rotation_3d=np.eye(3),
+                 plane_direction=[0,0,1]):
         """Defines a cluster with a symmetry of symmetry, a radius of radius in nm and position of position.
 
         Parameters:
@@ -225,9 +260,10 @@ class Cluster(object):
         self.symmetry = symmetry
         self.radius = radius
         self.position = position
-        self.rotation_2d = rotation_2d
+        self.rotation_2d = np.eye(3)
         self.rotation_3d = rotation_3d
         self.k = k
+        self.plane_direction = plane_direction
         self.beam_direction = [0,0,1]
 
     def get_diffraction(self, img_size=8.0,
@@ -259,6 +295,10 @@ class Cluster(object):
         angle = (2 * np.pi) / self.symmetry  # angle between speckles on the pattern
         k = [[np.cos(angle * i) * self.k, np.sin(angle * i) * self.k, 0] for i in
              range(self.symmetry)]  # vectors for the speckles perp to BA
+        #print(self.plane_direction)
+        if not np.allclose(self.plane_direction, [0, 0, 1]) and not np.allclose(self.plane_direction, [0, 0, -1]) :
+            rot = rotation_matrix_from_vectors([0,0,1],self.plane_direction)
+            k = [np.dot(rot,v) for v in k]
         k_rotated2d = [np.dot(self.rotation_2d, speckle) for speckle in k]
         k_rotated = [np.dot(self.rotation_3d, speckle) for speckle in k_rotated2d]
         return k_rotated
@@ -297,14 +337,14 @@ class Cluster(object):
                            radius=radius, shape=(num_pixels,num_pixels)) for k1 in k_rotated]
         return speckles, observed_intensity
 
-    def get_intensity(self,accelerating_voltage=200):
+    def get_intensity(self,accelerating_voltage=200, disorder=None):
         """Takes some image size in inverse nm and then plots the resulting
         """
         sphere_radius = 1 / _get_wavelength(accelerating_voltage)
         k_rotated = self.get_k_vectors()
         observed_intensity = [_get_speckle_intensity(k_vector=k,
                                                      ewald_sphere_rad=sphere_radius,
-                                                     disorder=self.disorder,
+                                                     disorder=disorder,
                                                      cluster_rad=self.radius,
                                                      beam_direction=self.beam_direction)
                               for k in k_rotated]
