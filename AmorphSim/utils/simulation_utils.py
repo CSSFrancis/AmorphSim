@@ -1,5 +1,5 @@
 import numpy as np
-import hyperspy.api as hs
+#import hyperspy.api as hs
 
 
 def _get_speckle_intensity(k_vector,

@@ -1,6 +1,6 @@
 import numpy as np
-import hyperspy.api as hs
-from hyperspy._signals.signal2d import Signal2D
+#import hyperspy.api as hs
+#from hyperspy._signals.signal2d import Signal2D
 
 from AmorphSim.utils.rotation_utils import _get_rotation_matrix, _get_random_2d_rot, _get_random_3d_rot
 from AmorphSim.utils.simulation_utils import _get_speckle_size, _get_wavelength, _shape_function, _get_speckle_intensity
@@ -260,7 +260,7 @@ class Cluster(object):
         self.symmetry = symmetry
         self.radius = radius
         self.position = position
-        self.rotation_2d = np.eye(3)
+        self.rotation_2d = rotation_2d
         self.rotation_3d = rotation_3d
         self.k = k
         self.plane_direction = plane_direction

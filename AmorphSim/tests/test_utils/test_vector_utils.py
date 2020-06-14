@@ -2,7 +2,7 @@ from unittest import TestCase
 import numpy as np
 import matplotlib.pyplot as plt
 
-from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors,build_ico
+from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors,build_ico, build_ico_positions
 from mpl_toolkits.mplot3d import Axes3D
 
 class TestVectorUtils(TestCase):
@@ -19,4 +19,15 @@ class TestVectorUtils(TestCase):
         ax.scatter(j[:, 0], j[:, 1], j[:, 2],label="3-fold Axes")
         ax.scatter(l[:, 0], l[:, 1], l[:, 2],label="2-fold Axes")
         plt.legend()
+        plt.show()
+
+    def test_icoso_positions(self):
+        pos = build_ico_positions()
+        M = rotation_matrix_from_vectors(vec1=[0,0,1],vec2=pos[1])
+        rot_pos = np.array([np.dot(p,M) for p in pos])
+        for p in rot_pos:
+            print(40, p[0]*2.7+100, p[1]*2.7+100, p[2]*2.7+20, 1.0, .8)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(rot_pos[:,0],rot_pos[:,1],rot_pos[:,2], s=500)
         plt.show()
