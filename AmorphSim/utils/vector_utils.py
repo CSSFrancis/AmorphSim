@@ -60,3 +60,26 @@ def build_ico_positions():
                  [-0.85065080835204, 0.5257311121191336, 0.0],
                  [-0.85065080835204, -0.5257311121191336, 0.0]]
     return np.array(positions)
+
+def get_ico_edges(positions, shell = 2):
+    edges = []
+    for v1 in positions:
+        for v2 in positions:
+            dist = np.abs(np.linalg.norm(np.array(v1)-np.array(v2)))
+            if shell*1.06 > dist > shell:
+                edges.append((v1+v2)/2)
+    edges = np.unique(edges, axis=0)
+    return edges
+
+def get_ico_faces(positions, shell = 2):
+    faces = []
+    for v1 in positions:
+        for v2 in positions:
+            for v3 in positions:
+                n1 = np.abs(np.linalg.norm(np.array(v1) - np.array(v2))-shell*1.06)
+                n2 = np.abs(np.linalg.norm(np.array(v1) - np.array(v3))-shell*1.06)
+                n3 = np.abs(np.linalg.norm(np.array(v2) - np.array(v3))-shell*1.06)
+                if n1 < .3 and n2 < .3 and  n3 < .3:
+                    faces.append((v1+v2+v3)/3)
+    faces= np.unique(faces, axis=0)
+    return faces
