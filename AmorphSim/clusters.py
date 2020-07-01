@@ -3,6 +3,7 @@ from diffpy.structure import Atom
 from AmorphSim.utils.vector_utils import get_ico_edges,get_ico_faces
 import numpy as np
 
+
 class Icosohedron(Cluster):
     def __init__(self, central_atom=None, outer_atoms=None):
         """
@@ -25,7 +26,6 @@ class Icosohedron(Cluster):
             new_v = v / np.linalg.norm(v)
             self.append(Atom(xyz=new_v, atype=outer_atoms))
 
-
 class Mackay(Icosohedron):
     def __init__(self, central_atom=None, outer_atoms=None, num_shells=2):
         """
@@ -36,7 +36,7 @@ class Mackay(Icosohedron):
         outer_atoms: str or list
             The element of list of elements for the outer atoms of the icosohedron
         """
-        super().__init__(central_atom=central_atom,outer_atoms=outer_atoms)
+        super().__init__(central_atom=central_atom, outer_atoms=outer_atoms)
         new_pos = []
         shell2 = self.xyz[1:]*2
         shell2 = np.append(shell2, get_ico_edges(shell2),axis=0)

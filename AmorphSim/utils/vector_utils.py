@@ -61,6 +61,7 @@ def build_ico_positions():
                  [-0.85065080835204, -0.5257311121191336, 0.0]]
     return np.array(positions)
 
+
 def get_ico_edges(positions, shell = 2):
     edges = []
     for v1 in positions:

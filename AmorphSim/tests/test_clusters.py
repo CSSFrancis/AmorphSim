@@ -26,15 +26,17 @@ class TestClusters(TestCase):
 
     def test_random(self):
         b = Icosohedron(central_atom="Zr", outer_atoms="Cu")
-        b.random_rot_xyz()
+        b.rotate_from_vectors([1, 0, 0], [1,2, 1])
+        b.plot()
+        plt.show()
 
     def test_Mackay(self):
         mackay = Mackay(central_atom="Cu", outer_atoms="Zr")
         mackay.plot()
         plt.show()
+        mackay.random_rot_xyz(folder="Mackay", num=1000)
 
     def test_anti_Mackay(self):
-        mackay = AntiMackay(central_atom="Cu", outer_atoms="Zr")
-        mackay.plot()
-        plt.show()
+        anti_mackay = AntiMackay(central_atom="Cu", outer_atoms="Zr")
+        anti_mackay.random_rot_xyz(folder="AntiMackay")
 

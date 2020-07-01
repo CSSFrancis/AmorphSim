@@ -77,10 +77,10 @@ class Cluster(Structure):
         ax = fig.add_subplot(111, projection='3d')
         coordinates = self.xyz_cartn
         print(self.element)
-        ax.scatter(coordinates[:,0], coordinates[:,1], coordinates[:,2],
+        ax.scatter(coordinates[:, 0], coordinates[:,1], coordinates[:,2],
                    marker='o', s=300)
 
-    def random_rot_xyz(self,num=100, folder="RandCluster", scale=5, offset=[100,100,20]):
+    def random_rot_xyz(self, num=100, folder="RandCluster", scale=2, offset=[100,100,20]):
         if not os.path.exists(folder):
             os.makedirs(folder)
         for i in range(num):
@@ -103,7 +103,7 @@ class Cluster(Structure):
             with open(file, "+w") as f:
                 f.write(newstr)
 
-    def rotate_from_matrix(self,matrix, inplace=False):
+    def rotate_from_matrix(self, matrix, inplace=False):
         if inplace:
             for i in range(len(self)):
                 self[i].xyz = np.dot(matrix, self[i].xyz)
@@ -113,6 +113,9 @@ class Cluster(Structure):
             for i in range(len(new)):
                 new[i].xyz = np.dot(matrix, new[i].xyz)
             return new
+
+    def all_rotations(self, num):
+
 
     def rotate_from_vectors(self, vector1, vector2):
         mat = rotation_matrix_from_vectors(vec1=vector1, vec2=vector2)
