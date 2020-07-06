@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from AmorphSim.utils.rotation_utils import _get_rotation_matrix,  _get_random_rotation
+from AmorphSim.utils.rotation_utils import _get_rotation_matrix,  _get_random_rotation, _get_points_on_sphere
 from AmorphSim.utils.simulation_utils import _shape_function, s_g_kernel
 
 
@@ -48,3 +48,10 @@ class TestRotUtils(TestCase):
         int1=_shape_function(radius=.1, deviation=dev1)
         int2= _shape_function(radius=.1, deviation=dev2)
         print(int1,int2)
+
+    def test_points_on_sphere(self):
+        points = _get_points_on_sphere()
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(points[:,0],points[:,1],points[:,2])
+        plt.show()

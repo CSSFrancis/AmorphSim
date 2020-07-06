@@ -3,7 +3,7 @@ from builtins import len
 import numpy as np
 from diffpy.structure import Atom, Structure
 from mpl_toolkits.mplot3d import Axes3D
-from AmorphSim.utils.rotation_utils import _rand_2d_rotation_matrix,_rand_3d_rotation_matrix
+from AmorphSim.utils.rotation_utils import _rand_2d_rotation_matrix,_rand_3d_rotation_matrix, _get_points_on_sphere
 import os
 from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors
 import matplotlib.pyplot as plt
@@ -32,6 +32,9 @@ class Cube:
 
     def __str__(self):
         return "<Cube of " + len(self.clusters) + " clusters"
+
+    def add_cluster(self, cluster, location):
+        self.clusters.append(cluster)
 
     def to_prismatic_xyz(self):
         """Prints to format for simulation with Prismatic. (.xyz files)
@@ -114,14 +117,31 @@ class Cluster(Structure):
                 new[i].xyz = np.dot(matrix, new[i].xyz)
             return new
 
-    def all_rotations(self, num):
+    def all_direction_xyz(self,npt=1000, folder="alldirections", scale=2,offset=[100,100,20]):
+        vectors = _get_points_on_sphere(npt=npt)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        for v in vectors:
+            rotated =self.rotate_from_vectors(vector1=[1,0,0],
+                                              vector2=v,
+                                              inplace=False)
+            print(rotated)
+            rotated.get_xyz(file=folder + "/" + str(v)+ ".xyz",
+                            scale=scale,
+                            offset=offset)
 
 
-    def rotate_from_vectors(self, vector1, vector2):
+    def rotate_from_vectors(self, vector1, vector2, inplace=False):
         mat = rotation_matrix_from_vectors(vec1=vector1, vec2=vector2)
-        for i in range(len(self)):
-            self[i].xyz = np.dot(mat, self[i].xyz)
-        print(self)
+        if inplace:
+            for i in range(len(self)):
+                self[i].xyz = np.dot(mat, self[i].xyz)
+            return None
+        else:
+            new = self
+            for i in range(len(new)):
+                new[i].xyz = np.dot(mat, new[i].xyz)
+            return new
 
     def plot_reciprocal(self, resolution=100):
         """Plots the reciprocal space  atoms of some structure in 3-D. Gives a voxel representation of

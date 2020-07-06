@@ -8,6 +8,21 @@ def _get_random_rotation(num_vectors):
     rand_rot = random(num_vectors) * np.pi
     return rand_vector, rand_rot
 
+def _get_points_on_sphere(npt=100):
+    points = []
+    phi = np.pi * (3. - np.sqrt(5.))  # golden angle in radians
+
+    for i in range(npt):
+        y = 1 - (i / float(npt - 1)) * 2  # y goes from 1 to -1
+        radius = np.sqrt(1 - y * y)  # radius at y
+
+        theta = phi * i  # golden angle increment
+        x = np.cos(theta) * radius
+        z = np.sin(theta) * radius
+
+        points.append([x, y, z])
+    return np.array(points)
+
 def _rand_2d_rotation_matrix():
     angle = np.random.uniform(low=0.0, high=np.pi)
     M = np.array([[np.cos(angle),-np.sin(angle), 0],

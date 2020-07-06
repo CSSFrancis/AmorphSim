@@ -40,3 +40,7 @@ class TestClusters(TestCase):
         anti_mackay = AntiMackay(central_atom="Cu", outer_atoms="Zr")
         anti_mackay.random_rot_xyz(folder="AntiMackay")
 
+    def test_all_rot(self):
+        anti_mackay = AntiMackay(central_atom="Cu", outer_atoms="Zr")
+        anti_mackay.all_direction_xyz(100)
+
