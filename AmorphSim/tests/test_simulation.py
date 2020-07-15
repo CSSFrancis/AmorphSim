@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class TestCluster(TestCase):
     def setUp(self):
-        self.c = Cluster(symmetry=10,radius=.5, k=4.0, position=(1,1))
+        self.c = Cluster(symmetry=10, radius=.5, k=4.0, position=(1, 1))
 
     def test_get_k_vectors(self):
 
@@ -18,6 +18,7 @@ class TestCluster(TestCase):
         k = np.array(self.c.get_k_vectors())
         plt.scatter(k[:,0], k[:,1])
         plt.show()
+
     def test_get_k_vectors_rot(self):
         #self.c.rotation_3d = np.eye(3)
         self.c.plane_direction=[1,1,1]

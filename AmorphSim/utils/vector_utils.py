@@ -14,6 +14,7 @@ def rotation_matrix_from_vectors(vec1, vec2):
     rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
     return rotation_matrix
 
+
 def build_ico():
     five_vertexes = np.array([[0,1,1.9], [0,-1,1.9],[0,1,-1.9], [0,-1,-1.9],
                               [1,1.9,0], [-1,1.9,0],[1,-1.9,0], [-1,-1.9,0],
@@ -51,10 +52,10 @@ def build_ico_positions():
                  [0.0, 0.85065080835204, -0.5257311121191336],
                  [0.0, -0.85065080835204, 0.5257311121191336],
                  [0.0, -0.85065080835204, -0.5257311121191336],
-                 [0.5257311121191336, 0.0 , 0.85065080835204],
-                 [-0.5257311121191336, 0.0 , 0.85065080835204],
-                 [0.5257311121191336, 0.0 , -0.85065080835204],
-                 [-0.5257311121191336, 0.0 , -0.85065080835204],
+                 [0.5257311121191336, 0.0, 0.85065080835204],
+                 [-0.5257311121191336, 0.0, 0.85065080835204],
+                 [0.5257311121191336, 0.0, -0.85065080835204],
+                 [-0.5257311121191336, 0.0, -0.85065080835204],
                  [0.85065080835204, 0.5257311121191336, 0.0],
                  [0.85065080835204, -0.525731112119133, 0.0],
                  [-0.85065080835204, 0.5257311121191336, 0.0],
@@ -62,25 +63,39 @@ def build_ico_positions():
     return np.array(positions)
 
 
-def get_ico_edges(positions, shell = 2):
+def get_ico_edges(positions, shell=2):
     edges = []
-    for v1 in positions:
-        for v2 in positions:
+    atoms = []
+    for i, v1 in enumerate(positions):
+        for j, v2 in enumerate(positions):
             dist = np.abs(np.linalg.norm(np.array(v1)-np.array(v2)))
             if shell*1.06 > dist > shell:
+                atoms.append(sorted([i+1, j+1]))
                 edges.append((v1+v2)/2)
     edges = np.unique(edges, axis=0)
-    return edges
+    atoms = np.unique(atoms, axis=0)
+    return atoms, edges
 
-def get_ico_faces(positions, shell = 2):
+
+def get_ico_faces(positions, shell=1):
+    vectors = []
     faces = []
-    for v1 in positions:
-        for v2 in positions:
-            for v3 in positions:
+    for i, v1 in enumerate(positions):
+        for j, v2 in enumerate(positions):
+            for k, v3 in enumerate(positions):
                 n1 = np.abs(np.linalg.norm(np.array(v1) - np.array(v2))-shell*1.06)
                 n2 = np.abs(np.linalg.norm(np.array(v1) - np.array(v3))-shell*1.06)
                 n3 = np.abs(np.linalg.norm(np.array(v2) - np.array(v3))-shell*1.06)
-                if n1 < .3 and n2 < .3 and  n3 < .3:
-                    faces.append((v1+v2+v3)/3)
-    faces= np.unique(faces, axis=0)
-    return faces
+                if n1 < .3 and n2 < .3 and n3 < .3:
+                    vectors.append((v1+v2+v3)/3)
+                    faces.append(sorted([i+1, j+1, k+1]))
+    faces = np.unique(faces, axis=0)
+    vectors = np.unique(vectors, axis=0)
+    return faces, vectors
+
+
+def _get_angle_between(v1, v2):
+    unit_vector1 = v1 / np.linalg.norm(vector1)
+    unit_vector2 = v2 / np.linalg.norm(vector2)
+    dot_product = np.dot(unit_vector1, unit_vector2)
+    return np.arccos(dot_product)  # angle in radian

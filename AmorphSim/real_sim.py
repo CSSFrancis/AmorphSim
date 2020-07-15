@@ -1,11 +1,12 @@
 from builtins import len
 
 import numpy as np
-from diffpy.structure import Atom, Structure
+import copy as copymod
+from diffpy.structure import Atom, Structure,Lattice
 from mpl_toolkits.mplot3d import Axes3D
 from AmorphSim.utils.rotation_utils import _rand_2d_rotation_matrix,_rand_3d_rotation_matrix, _get_points_on_sphere
 import os
-from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors
+from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors,_get_angle_between
 import matplotlib.pyplot as plt
 element_dict = {"H": 1, "He": 2, "Li": 3, "Be": 4, "B": 5, "C": 6, "N": 7, "O": 8,"F": 9, "Ne": 10,
                 "Na": 11, "Mg": 12, "Al": 13, "Si": 14, "P": 15, "S": 16, "Cl": 17, "Ar": 18, "K": 19,
@@ -72,7 +73,7 @@ class Cube:
 class Cluster(Structure):
     """Each Cluster extends the Structure class giving some unique simulation abilities to the strucutre
     """
-    def plot(self):
+    def plot(self, save=False, rotate=True):
         """Plots the atoms of some structure in 3-D.  The atoms are shown as spheres based on their atomic
         size.
         """
@@ -80,10 +81,39 @@ class Cluster(Structure):
         ax = fig.add_subplot(111, projection='3d')
         coordinates = self.xyz_cartn
         print(self.element)
-        ax.scatter(coordinates[:, 0], coordinates[:,1], coordinates[:,2],
-                   marker='o', s=300)
 
-    def random_rot_xyz(self, num=100, folder="RandCluster", scale=2, offset=[100,100,20]):
+        if not save:
+            ax.scatter(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2],
+                       marker='o', s=300)
+            ax.set_axis_off()
+            if rotate:
+                for angle in range(0, 360):
+                    ax.view_init(30, angle)
+                    plt.draw()
+                    plt.pause(.001)
+
+        if save:
+            import matplotlib.animation as animation
+            from matplotlib import rcParams
+            def init_function():
+                ax.scatter(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2],
+                           marker='o', s=300)
+                ax.set_axis_off()
+                return fig,
+            def animate(i):
+                # azimuth angle : 0 deg to 360 deg
+                ax.view_init(elev=10, azim=i * 4)
+                return fig,
+
+            # create animation using the animate() function with no repeat
+            # Animate
+            ani = animation.FuncAnimation(fig, animate, init_func=init_function,
+                                          frames=90, interval=50, blit=True)
+            fn = 'rotate_azimuth_angle_3d_surf'
+            ani.save(fn + '.mp4', writer='ffmpeg', fps=1000 / 50)
+            ani.save(fn + '.gif', writer='imagemagick', fps=1000 / 50)
+
+    def random_rot_xyz(self, num=100, folder="RandCluster", scale=2, offset=[100, 100, 20]):
         if not os.path.exists(folder):
             os.makedirs(folder)
         for i in range(num):
@@ -91,15 +121,16 @@ class Cluster(Structure):
             new = self.rotate_from_matrix(matrix=M, inplace=False)
             new.get_xyz(file=folder+"/"+str(i)+".xyz",scale=scale, offset=offset)
 
-    def get_xyz(self, file=None, scale=5, offset=[100, 100, 20]):
-        positions = self.xyz_cartn
+    def get_xyz(self, file=None, scale=5, offset=[100, 100, 20], disorder=1.0):
         atom_list = self.tolist()
         newstr = "Simulating XYZ \n     200.0 200.0 40.0\n"
         for a in atom_list:
-            newstr = newstr+(str(element_dict[a.element])+ " " +
-                             str((a.xyz[0]*scale)+offset[0]) + " " +
-                             str((a.xyz[1]*scale)+offset[1])+ " " +
-                             str((a.xyz[2]*scale)+offset[2])+ " " + str(1)+ " " + str(0.5)+"\n")
+            newstr = newstr+(str(element_dict[a.element]) + " " +
+                             str((a.x*scale)+offset[0]) + " " +
+                             str((a.y*scale)+offset[1]) + " " +
+                             str((a.z*scale)+offset[2]) + " " +
+                             str(a.occupancy) + " " +
+                             str(disorder)+"\n")
         if file is None:
             return newstr
         else:
@@ -117,7 +148,7 @@ class Cluster(Structure):
                 new[i].xyz = np.dot(matrix, new[i].xyz)
             return new
 
-    def all_direction_xyz(self,npt=1000, folder="alldirections", scale=2,offset=[100,100,20]):
+    def all_direction_xyz(self, npt=1000, folder="alldirections", scale=2, offset=[100, 100, 20], disorder=1.0):
         vectors = _get_points_on_sphere(npt=npt)
         if not os.path.exists(folder):
             os.makedirs(folder)
@@ -128,8 +159,28 @@ class Cluster(Structure):
             print(rotated)
             rotated.get_xyz(file=folder + "/" + str(v)+ ".xyz",
                             scale=scale,
-                            offset=offset)
+                            offset=offset,
+                            disorder=disorder)
+        return
 
+    def __copy__(self, target=None):
+        '''Create a deep copy of this instance.
+        target   -- optional target instance for copying, useful for
+                    copying a derived class.  Defaults to new instance
+                    of the same type as self.
+        Return a duplicate instance of this object.
+        '''
+        if target is None:
+            target = Cluster()
+        elif target is self:
+            return target
+        # copy attributes as appropriate:
+        target.title = self.title
+        target.lattice = Lattice(self.lattice)
+        target.pdffit = copymod.deepcopy(self.pdffit)
+        # copy all atoms to the target
+        target[:] = self
+        return target
 
     def rotate_from_vectors(self, vector1, vector2, inplace=False):
         mat = rotation_matrix_from_vectors(vec1=vector1, vec2=vector2)
@@ -138,16 +189,22 @@ class Cluster(Structure):
                 self[i].xyz = np.dot(mat, self[i].xyz)
             return None
         else:
-            new = self
+            new = self.__copy__()
             for i in range(len(new)):
                 new[i].xyz = np.dot(mat, new[i].xyz)
             return new
+
+    def plot_rotate(self, start=[1,0,0], end=[0,1,0],npts=90):
+        angle = _get_angle_between(start,end)
+        angles = np.linspace(0, angle,npts)
+        vectors = [[np.cos(a), np.sin(a), 0] for a in angles]
 
     def plot_reciprocal(self, resolution=100):
         """Plots the reciprocal space  atoms of some structure in 3-D. Gives a voxel representation of
         the space.
         """
         pass
+
     def get_reciprocal_space(self, resolution=100):
         """Returns the three dimensional reciprocal space fro some cluster where some cut along the
         reciprocal space represents the kinetic diffraction along some direction. Creates a resolution^3

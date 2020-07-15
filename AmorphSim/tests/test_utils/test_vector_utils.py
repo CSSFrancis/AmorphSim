@@ -2,7 +2,8 @@ from unittest import TestCase
 import numpy as np
 import matplotlib.pyplot as plt
 
-from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors,build_ico, build_ico_positions
+from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors, build_ico, build_ico_positions, get_ico_edges, get_ico_faces
+from AmorphSim.clusters import Icosahedron
 from mpl_toolkits.mplot3d import Axes3D
 
 class TestVectorUtils(TestCase):
@@ -31,3 +32,14 @@ class TestVectorUtils(TestCase):
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(rot_pos[:,0],rot_pos[:,1],rot_pos[:,2], s=500)
         plt.show()
+
+    def test_get_ico_edges(self):
+        i = Icosahedron("Zr", "Zr")
+        atoms, edges = get_ico_edges(i.xyz[1:], shell=1)
+        print(len(atoms))
+
+    def test_get_ico_faces(self):
+        i = Icosahedron("Zr", "Zr")
+        faces, vectors = get_ico_faces(i.xyz[1:], shell=1)
+        print(faces)
+        print(vectors)
