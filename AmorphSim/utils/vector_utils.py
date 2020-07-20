@@ -77,18 +77,19 @@ def get_ico_edges(positions, shell=2):
     return atoms, edges
 
 
-def get_ico_faces(positions, shell=1):
+def get_ico_faces(positions, shell_dist=1):
     vectors = []
     faces = []
     for i, v1 in enumerate(positions):
         for j, v2 in enumerate(positions):
             for k, v3 in enumerate(positions):
-                n1 = np.abs(np.linalg.norm(np.array(v1) - np.array(v2))-shell*1.06)
-                n2 = np.abs(np.linalg.norm(np.array(v1) - np.array(v3))-shell*1.06)
-                n3 = np.abs(np.linalg.norm(np.array(v2) - np.array(v3))-shell*1.06)
+                n1 = np.abs(np.linalg.norm(np.array(v1) - np.array(v2))-shell_dist*1.06)/shell_dist
+                n2 = np.abs(np.linalg.norm(np.array(v1) - np.array(v3))-shell_dist*1.06)/shell_dist
+                n3 = np.abs(np.linalg.norm(np.array(v2) - np.array(v3))-shell_dist*1.06)/shell_dist
                 if n1 < .3 and n2 < .3 and n3 < .3:
                     vectors.append((v1+v2+v3)/3)
                     faces.append(sorted([i+1, j+1, k+1]))
+    print(faces)
     faces = np.unique(faces, axis=0)
     vectors = np.unique(vectors, axis=0)
     return faces, vectors

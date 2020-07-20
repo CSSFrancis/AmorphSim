@@ -1,4 +1,4 @@
-from AmorphSim.create_xyz import simulate_all, simulate_rotate, simulate_series
+from AmorphSim.create_xyz import simulate_all, simulate_rotate, simulate_series, simulate_all_series
 from unittest import TestCase
 
 
@@ -18,3 +18,6 @@ class TestXYZ(TestCase):
 
     def test_simulate_series3(self):
         simulate_series(cluster="FCC", folder="FCCSeries4fold")
+
+    def test_simulate_series_all(self):
+        simulate_all_series()

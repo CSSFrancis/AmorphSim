@@ -6,81 +6,76 @@ import numpy as np
 
 class TestIcosahedron(TestCase):
     def test_init(self):
-        i = Icosahedron(central_atom="Zr", outer_atoms="Cu")
-        i2 = Icosahedron(central_atom="Zr", outer_atoms="Cu", size=3)
-        i3 = Icosahedron(central_atom="Zr", outer_atoms="Cu", size=3, anti=True)
-        i3.plot()
+        i = Icosahedron(central_atom="Cu", outer_atoms="Cu", shell_distance=2.54, num_shells=1)
+        assert isinstance(i, Icosahedron)
+        assert len(i) == 13
+
+    def test_mackay(self):
+        i = Icosahedron(central_atom="Cu", outer_atoms="Cu", shell_distance=2.54, num_shells=2)
+        assert isinstance(i, Icosahedron)
+        assert len(i) == 55
+
+    def test_antimackay(self):
+        i = Icosahedron(central_atom="Cu", outer_atoms="Cu", shell_distance=2.54, num_shells=2, anti=True)
+        assert isinstance(i, Icosahedron)
+        assert len(i) == 45
+
+    def test_get_2fold_axis(self):
+        i = Icosahedron(central_atom="Cu", outer_atoms="Cu", shell_distance=2.54, num_shells=1)
+        i.plot(rotate=False)
+        plt.show()
+
+    def test_get_5fold_axis(self):
+        i = Icosahedron(central_atom="Cu", outer_atoms="Cu", shell_distance=2.54, num_shells=1)
+        i.get_5_fold_axis(reinitialize=True)
+        i.plot(rotate=False)
+        plt.show()
+
+    def test_get_3fold_axis(self):
+        i = Icosahedron(central_atom="Cu", outer_atoms="Cu", shell_distance=2.54, num_shells=1)
+        i.get_3_fold_axis(reinitialize=True)
+        i.plot(rotate=False)
+        plt.show()
 
 
 class TestFCC(TestCase):
     def test_init(self):
-        f = FCC(atom1="Cu", atom2="Cu", lattice_parameter=3.59, size=2.6)
+        f = FCC(atom1="Cu", atom2="Cu", lattice_parameter=3.59, radius=2.6)
         assert len(f) == 7
 
     def test_6fold_axes(self):
-        f = FCC(atom1="Cu", atom2="Cu", lattice_parameter=3.59, size=5)
+        f = FCC(atom1="Cu", atom2="Cu", lattice_parameter=3.59, radius=5)
         f.get_6_fold_axis(inplace=True)
-        f.plot()
+        f.plot(rotate=False)
+        plt.show()
+
+    def test_4fold_axes(self):
+        f = FCC(atom1="Cu", atom2="Cu", lattice_parameter=3.59, radius=5)
+        f.get_4_fold_axis(inplace=True)
+        f.plot(rotate=False)
         plt.show()
 
 
-    def test_fcc(self):
-        f = FCC(atom1="Zr", atom2="Cu", size=3)
+class TestBCC(TestCase):
+    def test_init(self):
+        b = BCC(atom1="Fe", atom2="Fe", lattice_parameter=2.856, radius=3)
+        assert len(b) == 15
 
-    def test_bcc(self):
-        b = BCC(atom1="Zr", atom2="Cu", size=3)
-        b.plot(save=True)
+    def test_6fold_axes(self):
+        b = BCC(atom1="Fe", atom2="Fe", lattice_parameter=2.856, radius=5)
+        b.get_6_fold_axis(inplace=True)
+        b.plot(rotate=False)
         plt.show()
 
-    def test_plot(self):
-        b = BCC(atom1="Zr", atom2="Cu", size=1)
-        b.plot(save=True)
+    def test_4fold_axes(self):
+        f = BCC(atom1="Cu", atom2="Cu", lattice_parameter=2.856, radius=5)
+        f.get_4_fold_axis(inplace=True)
+        f.plot(rotate=False)
         plt.show()
 
-    def test_4foldFCC(self):
-        b = FCC(atom1="Zr", atom2="Cu",size=1)
-        #b.rotate_from_vectors(vector1=[0, 0, 1], vector2=[1, 1, 0], inplace=True)
-        b.plot(save=True)
+class TestCluster(TestCase):
+    def test_add_disorder(self):
+        b = BCC(atom1="Cu", atom2="Cu", lattice_parameter=3.59, radius=5)
+        b.add_disorder(sigma=.2)
+        b.plot()
         plt.show()
-
-    def test_6foldFCC(self):
-        b = FCC(atom1="Zr", atom2="Cu", size=1)
-        b.rotate_from_vectors(vector1=[0, 0, 1], vector2=[1, 1, 0], inplace=True)
-        b.plot(save=True)
-        plt.show()
-
-    def test_4foldBCC(self):
-        b = BCC(atom1="Zr", atom2="Cu",size=2)
-        #b.rotate_from_vectors(vector1=[0, 0, 1], vector2=[0.0, -0.52573111, 0.85065081], inplace=True)
-        b.plot(save=True)
-        plt.show()
-
-    def test_3foldBCC(self):
-        b = BCC(atom1="Zr", atom2="Cu", size=2)
-        b.rotate_from_vectors(vector1=[0, 0, 1], vector2=[1, 1, 1], inplace=True)
-        b.plot(save=True)
-        plt.show()
-
-
-    def test_5fold(self):
-        b = Icosahedron(central_atom="Zr", outer_atoms="Cu", size=1, anti=False)
-        b.rotate_from_vectors(vector1=[0, 0, 1], vector2=[0.0, -0.52573111, 0.85065081], inplace=True)
-        b.plot(save=True)
-        plt.show()
-
-    def test_3fold(self):
-        b = Icosahedron(central_atom="Zr", outer_atoms="Cu", size=1, anti=False)
-        b.rotate_from_vectors(vector1=[0, 0, 1], vector2=[-0.45879397, -0.45879397, 0.45879397], inplace=True)
-        b.plot(save=True)
-        plt.show()
-
-    def test_2fold(self):
-        b = Icosahedron(central_atom="Zr", outer_atoms="Cu", size=1, anti=False)
-        #b.rotate_from_vectors(vector1=[0, 0, 1], vector2=[0.0, -0.52573111, 0.85065081], inplace=True)
-        b.plot(save=True)
-        plt.show()
-
-    def test_all_rot(self):
-        anti_mackay = AntiMackay(central_atom="Cu", outer_atoms="Zr")
-        anti_mackay.all_direction_xyz(100)
-

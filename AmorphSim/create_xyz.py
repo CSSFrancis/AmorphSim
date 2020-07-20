@@ -84,3 +84,51 @@ def simulate_series(atom="Cu",
             i.rotate_from_vectors(vector1=[0, 0, 1], vector2=[1, 1, 1], inplace=True)
             for d in disorder:
                 i.get_xyz(file=folder+"/size:"+str(s)+"disorder:"+str(d)+".xyz", disorder=d)
+
+
+def simulate_all_series(folder="all_series",
+                        sizes=[3.0, 5.0, 7.0, 9.0, 11.0],
+                        disorder=[0.00, 0.20, 0.40, 0.60, 0.80, 1.0],
+                        offset=[100, 100, 20]):
+    """This function is used to create a series of high symmetry
+    atomic positions with varying levels of disorder as well as
+    varying size of the cluster
+    """
+    if not os.path.exists(folder):
+         os.makedirs(folder)
+    if not os.path.exists(folder + "/BCC6Fold"):
+        os.makedirs(folder + "/BCC6Fold")
+    if not os.path.exists(folder + "/BCC4Fold"):
+        os.makedirs(folder + "/BCC4Fold")
+    if not os.path.exists(folder + "/FCC4Fold"):
+        os.makedirs(folder + "/FCC4Fold")
+    if not os.path.exists(folder + "/FCC6Fold"):
+        os.makedirs(folder + "/FCC6Fold")
+    if not os.path.exists(folder + "/Ico2Fold"):
+        os.makedirs(folder + "/Ico2Fold")
+    if not os.path.exists(folder + "/Ico3Fold"):
+        os.makedirs(folder + "/Ico3Fold")
+    if not os.path.exists(folder + "/Ico5Fold"):
+        os.makedirs(folder + "/Ico5Fold")
+
+    for i_s, s in enumerate(sizes):
+        # BCC Simulations
+        b = BCC(radius=s)
+        print("Num BCC Atoms:", len(b))
+        b.get_xyz(file=folder + "/BCC4Fold" + "/size:" + str(s), disorder=disorder, offset=offset)
+        b.get_6_fold_axis(inplace=True)
+        b.get_xyz(file=folder + "/BCC6Fold" + "/size:" + str(s), disorder=disorder, offset=offset)
+        # FCC simulations
+        f = FCC(radius=s)
+        print("Num FCC Atoms:", len(f))
+        f.get_xyz(file=folder + "/FCC4Fold" + "/size:" + str(s), disorder=disorder, offset=offset)
+        f.get_6_fold_axis()
+        f.get_xyz(file=folder + "/FCC6Fold" + "/size:" + str(s), disorder=disorder, offset=offset)
+        # Icosahedron Simulations
+        i = Icosahedron(num_shells=i_s)
+        i.get_xyz(file=folder + "/Ico2Fold" + "/size:" + str(i_s), disorder=disorder, offset=offset)
+        i = Icosahedron(num_shells=i_s)
+        i.get_3_fold_axis()
+        i.get_xyz(file=folder + "/Ico3Fold" + "/size:" + str(i_s), disorder=disorder, offset=offset)
+        i.get_5_fold_axis()
+        i.get_xyz(file=folder + "/Ico5Fold" + "/size:" + str(i_s), disorder=disorder, offset=offset)

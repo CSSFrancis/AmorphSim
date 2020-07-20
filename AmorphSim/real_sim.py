@@ -73,6 +73,12 @@ class Cube:
 class Cluster(Structure):
     """Each Cluster extends the Structure class giving some unique simulation abilities to the strucutre
     """
+    def __init__(self):
+        self.initial_atoms = []
+
+    def reset_atoms(self):
+        for i, a in enumerate(self.initial_atoms):
+            self[i] = a
     def plot(self, save=False, rotate=True):
         """Plots the atoms of some structure in 3-D.  The atoms are shown as spheres based on their atomic
         size.
@@ -121,21 +127,37 @@ class Cluster(Structure):
             new = self.rotate_from_matrix(matrix=M, inplace=False)
             new.get_xyz(file=folder+"/"+str(i)+".xyz",scale=scale, offset=offset)
 
-    def get_xyz(self, file=None, scale=5, offset=[100, 100, 20], disorder=1.0):
-        atom_list = self.tolist()
-        newstr = "Simulating XYZ \n     200.0 200.0 40.0\n"
-        for a in atom_list:
-            newstr = newstr+(str(element_dict[a.element]) + " " +
-                             str((a.x*scale)+offset[0]) + " " +
-                             str((a.y*scale)+offset[1]) + " " +
-                             str((a.z*scale)+offset[2]) + " " +
-                             str(a.occupancy) + " " +
-                             str(disorder)+"\n")
+    def get_xyz(self, file=None, offset=[100, 100, 20], disorder=[0.05, 0.1, 0.15, 0.20, 0.25, 0.3], fp=5):
+        """Get a series of xyz positions as a function of list of disorder parameters
+        file: str
+            The name of the file to be created without .xyz at the end of the filename
+        offset: vector
+            The offset for the simulation.  This depends on the simulation
+            size and shifts the atom positions by the offset
+        disorder: list
+
+        """
+
+        string_list =[]
+        for d in disorder:
+            newstr = "Simulating XYZ \n     200.0 200.0 40.0\n"
+            for nf in range(fp):
+                new = self.add_disorder(sigma=d, inplace=False)
+                for a in new:
+                    newstr = newstr+(str(element_dict[a.element]) + " " +
+                                     str(a.x+offset[0]) + " " +
+                                     str(a.y+offset[1]) + " " +
+                                     str(a.z+offset[2]) + " " +
+                                     str(a.occupancy) + " " +
+                                     str(0.0)+"\n")
+            string_list.append(newstr)
         if file is None:
-            return newstr
+            return string_list
         else:
-            with open(file, "+w") as f:
-                f.write(newstr)
+            for d, newstr in zip(disorder, string_list):
+                for nf in range(fp):
+                    with open(file+"d:"+str(d)+"fp:"+str(nf)+".xyz", "+w") as f:
+                        f.write(newstr)
 
     def rotate_from_matrix(self, matrix, inplace=False):
         if inplace:
@@ -162,6 +184,22 @@ class Cluster(Structure):
                             offset=offset,
                             disorder=disorder)
         return
+
+    def add_disorder(self, sigma=0.1, inplace=True):
+        if inplace:
+            for atom in self:
+                dx, dy, dz = np.random.randn(3)*sigma
+                atom.x = atom.x + dx
+                atom.y = atom.y + dy
+                atom.z = atom.z + dz
+        else:
+            new = self.copy()
+            for atom in new:
+                dx, dy, dz = np.random.randn(3)*sigma
+                atom.x = atom.x + dx
+                atom.y = atom.y + dy
+                atom.z = atom.z + dz
+            return new
 
     def __copy__(self, target=None):
         '''Create a deep copy of this instance.
