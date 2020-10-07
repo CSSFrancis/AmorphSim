@@ -2,12 +2,18 @@ from AmorphSim.real_sim import Cluster
 from diffpy.structure import Atom
 from AmorphSim.utils.vector_utils import get_ico_edges, get_ico_faces
 from AmorphSim.utils.structure_generators import _create_ico, _create_fcc,_create_bcc
-
+from AmorphSim.draw_3d import Icosohedron_3d,FCC_3d
 import numpy as np
 
 
 class Icosahedron(Cluster):
-    def __init__(self, central_atom="Cu", outer_atoms="Cu", shell_distance=2.54, num_shells=10, anti=False):
+    def __init__(self,
+                 central_atom="Cu",
+                 outer_atoms="Cu",
+                 shell_distance=2.54,
+                 num_shells=1,
+                 anti=False,
+                 position=[0, 0, 0]):
         """
         Parameters
         ______________
@@ -22,7 +28,7 @@ class Icosahedron(Cluster):
         anti: boolean
             If the cluster should be an anti mackay cluster instead of a mackay cluster
         """
-        super().__init__()
+        super().__init__(position=position)
         self.initial_atoms = _create_ico(central_atom=central_atom,
                                          outer_atoms=outer_atoms,
                                          shell_distance=shell_distance,
@@ -30,6 +36,7 @@ class Icosahedron(Cluster):
                                          anti=anti)
         for i in self.initial_atoms:
             self.append(i)
+        self.radius = num_shells*shell_distance
 
     def get_5_fold_axis(self, beam_direction=[0, 0, 1], reinitialize=True, inplace=True):
         """rotate the 5fold axes so that it is perpendicular to the beam direction [0,0,1]
@@ -86,9 +93,18 @@ class Icosahedron(Cluster):
         else:
             return self
 
+    def draw(self):
+        print("Radius:", self.radius)
+        return Icosohedron_3d(radius=self.radius, location=self.position)
+
 
 class FCC(Cluster):
-    def __init__(self, atom1="Cu", atom2="Cu", lattice_parameter=2.54, radius=1):
+    def __init__(self,
+                 atom1="Cu",
+                 atom2="Cu",
+                 lattice_parameter=2.54,
+                 radius=3,
+                 position=[0, 0, 0]):
         """
         Parameters
         ______________
@@ -99,13 +115,14 @@ class FCC(Cluster):
         radius: float
             The radius of the cluster in angstroms
         """
-        super().__init__()
+        super().__init__(position=position)
         self.initial_atoms = _create_fcc(atom1=atom1,
                                          atom2=atom2,
                                          lattice_parameter=lattice_parameter,
                                          size=radius)
         for i in self.initial_atoms:
             self.append(i)
+        self.radius = radius
 
     def get_6_fold_axis(self, beam_direction=[0, 0, 1], reinitialize=True, inplace=True):
         """rotate to 6-fold axes so that it is perpendicular to the beam direction [0,0,1]
@@ -143,6 +160,9 @@ class FCC(Cluster):
             return None
         else:
             return self
+
+    def draw(self):
+        return FCC_3d(radius=self.radius, location=self.position)
 
 
 class BCC(Cluster):

@@ -34,7 +34,7 @@ class Cube:
     def __str__(self):
         return "<Cube of " + len(self.clusters) + " clusters"
 
-    def add_cluster(self, cluster, location):
+    def add_cluster(self, cluster):
         self.clusters.append(cluster)
 
     def to_prismatic_xyz(self):
@@ -67,18 +67,35 @@ class Cube:
     def plot_3d(self):
         """Plots the clusters in 3 dimensions as prototypical shapes?
         """
-        pass
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.set_xlim([0, self.dimensions[0]])
+        ax.set_ylim([0, self.dimensions[1]])
+        ax.set_zlim([0, self.dimensions[2]])
+        ax.set_xlabel("Real Space, X, nm")
+        ax.set_ylabel("Real Space, Y, nm")
+        #ax.set_xticks([])
+        #ax.set_yticks([])
+        ax.set_zticks([])
+        ax.set_facecolor("grey")
+        for c in self.clusters:
+            d = c.draw()
+            ax.add_collection3d(d)
+
+
 
 
 class Cluster(Structure):
     """Each Cluster extends the Structure class giving some unique simulation abilities to the strucutre
     """
-    def __init__(self):
+    def __init__(self, position=[0,0,0]):
         self.initial_atoms = []
+        self.position = position
 
     def reset_atoms(self):
         for i, a in enumerate(self.initial_atoms):
             self[i] = a
+
     def plot(self, save=False, rotate=True):
         """Plots the atoms of some structure in 3-D.  The atoms are shown as spheres based on their atomic
         size.
@@ -249,3 +266,5 @@ class Cluster(Structure):
         space
         """
         pass
+    def draw(self):
+        return
