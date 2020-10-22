@@ -1,6 +1,5 @@
 from unittest import TestCase
-from AmorphSim.real_sim import Cluster
-from AmorphSim.clusters import Cubic,Icosohedron,AntiMckay,FCC,BCC
+from AmorphSim.clusters import BCC
 
 
 class TestRealCube(TestCase):

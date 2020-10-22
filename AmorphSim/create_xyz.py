@@ -1,5 +1,4 @@
 import os
-from AmorphSim.real_sim import Cluster
 import numpy as np
 from AmorphSim.clusters import FCC, BCC, Icosahedron
 from AmorphSim.utils.rotation_utils import _get_points_on_sphere

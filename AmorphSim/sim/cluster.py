@@ -1,92 +1,18 @@
-from builtins import len
-
-import numpy as np
-import copy as copymod
 from diffpy.structure import Atom, Structure,Lattice
-from mpl_toolkits.mplot3d import Axes3D
-from AmorphSim.utils.rotation_utils import _rand_2d_rotation_matrix,_rand_3d_rotation_matrix, _get_points_on_sphere
-import os
-from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors,_get_angle_between
+from diffsims.generators import DiffractionGenerator
 import matplotlib.pyplot as plt
+
+
 element_dict = {"H": 1, "He": 2, "Li": 3, "Be": 4, "B": 5, "C": 6, "N": 7, "O": 8,"F": 9, "Ne": 10,
                 "Na": 11, "Mg": 12, "Al": 13, "Si": 14, "P": 15, "S": 16, "Cl": 17, "Ar": 18, "K": 19,
                 "Ca": 20, "Sc": 21, "Ti": 22, "V": 23, "Cr": 24, "Mn": 25, "Fe": 26, "Co": 27, "Ni": 28,
                 "Cu": 29, "Zn": 30, "Ga": 31, "Ge": 32, "As": 33, "Se": 34, "Br": 35, "Kr": 36, "Rb": 37,
                 "Sr": 38, "Y": 39, "Zr": 40}
 
-
-class Cube:
-    """
-    The main idea with the Cube object is that it is a simplified way of visualizing a glass as a list
-    of clusters and their relative positions. From that idea we can build a model of each cluster
-    as well as get the positions of each atom for simulation either dynamically or not...
-    """
-    def __init__(self, dimensions=(20, 20, 20)):
-        """Initializes the simulation cube in nm
-        Parameters
-        --------------
-        dimensions: tuple
-            The dimensions of the cube to simulate.
-        """
-        self.clusters = []
-        self.dimensions = np.array(dimensions)
-
-    def __str__(self):
-        return "<Cube of " + len(self.clusters) + " clusters"
-
-    def add_cluster(self, cluster):
-        self.clusters.append(cluster)
-
-    def to_prismatic_xyz(self):
-        """Prints to format for simulation with Prismatic. (.xyz files)
-        """
-        pass
-
-    def prism_simulate(self, beam_direction=[1, 0, 0], **kwargs):
-        """Simulates using Prismatic to return a 4-D STEM dataset along some beam direction...
-        """
-        pass
-
-    def kinematic_simulate(self,
-                           beam_size=1,
-                           beam_step=1.,
-                           beam_direction=[1, 0, 0],
-                           ):
-        """Simulates using kinematic diffraction
-        :param beam_direction:
-        :param kwargs:
-        :return:
-        """
-        pass
-
-    def plot_2d(self):
-        """Plots the clusters in 2 dimensional projection
-        """
-        pass
-
-    def plot_3d(self):
-        """Plots the clusters in 3 dimensions as prototypical shapes?
-        """
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_xlim([0, self.dimensions[0]])
-        ax.set_ylim([0, self.dimensions[1]])
-        ax.set_zlim([0, self.dimensions[2]])
-        ax.set_xlabel("Real Space, X, nm")
-        ax.set_ylabel("Real Space, Y, nm")
-        #ax.set_xticks([])
-        #ax.set_yticks([])
-        ax.set_zticks([])
-        ax.set_facecolor("grey")
-        for c in self.clusters:
-            d = c.draw()
-            ax.add_collection3d(d)
-
-
-
-
 class Cluster(Structure):
-    """Each Cluster extends the Structure class giving some unique simulation abilities to the strucutre
+    """Each Cluster extends the Structure class
+     giving it access to the Strcuture class and
+     the diffraction simulation capabilities of diffsims
     """
     def __init__(self, position=[0,0,0]):
         self.initial_atoms = []
@@ -258,13 +184,16 @@ class Cluster(Structure):
         """Plots the reciprocal space  atoms of some structure in 3-D. Gives a voxel representation of
         the space.
         """
+
         pass
 
-    def get_reciprocal_space(self, resolution=100):
-        """Returns the three dimensional reciprocal space fro some cluster where some cut along the
+    def get_reciprocal_space(self, accelerating_voltage, resolution=100):
+        """Returns the three dimensional reciprocal space from some cluster where some cut along the
         reciprocal space represents the kinetic diffraction along some direction. Creates a resolution^3
         space
         """
+        gen = DiffractionGenerator(accelerating_voltage)
+
         pass
     def draw(self):
         return

@@ -1,10 +1,10 @@
 from unittest import TestCase
 from AmorphSim.clusters import FCC, Icosahedron
 from AmorphSim.real_sim import Cube
-from AmorphSim.draw_3d import Icosohedron_3d, FCC_3d
+from AmorphSim.draw.draw_3d import Icosohedron_3d, FCC_3d
 import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
+
 
 class TestIco(TestCase):
     def test_draw_ico(self):

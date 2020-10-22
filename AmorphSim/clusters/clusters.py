@@ -1,9 +1,6 @@
 from AmorphSim.real_sim import Cluster
-from diffpy.structure import Atom
-from AmorphSim.utils.vector_utils import get_ico_edges, get_ico_faces
 from AmorphSim.utils.structure_generators import _create_ico, _create_fcc,_create_bcc
-from AmorphSim.draw_3d import Icosohedron_3d,FCC_3d
-import numpy as np
+from AmorphSim.draw.draw_3d import Icosohedron_3d,FCC_3d
 
 
 class Icosahedron(Cluster):
