@@ -56,3 +56,30 @@ class FCC_3d(Poly3DCollection):
         self.set_linewidth(line_width)
         self.set_edgecolor("k")
 
+
+class Cube3d(Poly3DCollection):
+    def __init__(self, line_width=1, alpha=.5, shape= [20,20,20], location= [0, 0, 0]):
+        # create squares
+        v = np.array([[0, 0, 0],
+                      [shape[0], 0,0],
+                      [shape[0], shape[1], 0],
+                      [0, shape[1], 0],
+                      [shape[0], 0, shape[2]],
+                      [0, 0, shape[2]],
+                      [0, shape[1], shape[2]],
+                      [shape[0],shape[1], shape[2]]])
+
+        verticies = [[v[0], v[1], v[2], v[3]],
+                     [v[4], v[5], v[6], v[7]],
+                     [v[0], v[1], v[4], v[5]],
+                     [v[2], v[3], v[6], v[7]],
+                     [v[2], v[1], v[4], v[7]],
+                     [v[5], v[6], v[3], v[0]]]
+
+        super().__init__(verticies)
+        self.set_alpha(alpha=alpha)
+        self.set_linewidth(line_width)
+        self.set_edgecolor("k")
+        self.set_facecolor("k")
+
+

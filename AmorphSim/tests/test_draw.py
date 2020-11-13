@@ -1,12 +1,40 @@
 from unittest import TestCase
-from AmorphSim.clusters import FCC, Icosahedron
-from AmorphSim.real_sim import Cube
-from AmorphSim.draw.draw_3d import Icosohedron_3d, FCC_3d
+from AmorphSim.clusters.clusters import FCC, Icosahedron
+from AmorphSim.sim.simulation_cube import Cube
+from AmorphSim.draw.draw_3d import Icosohedron_3d, FCC_3d, Cube3d
 import matplotlib.pyplot as plt
 import numpy as np
-
+import matplotlib.animation as animation
+from matplotlib import rcParams
 
 class TestIco(TestCase):
+    def test_draw_ico(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        def init_function():
+            ax.set_xlim([-1, 1])
+            ax.set_ylim([-1, 1])
+            ax.set_zlim([-1, 1])
+            ax.axis("off")
+            i = Icosohedron_3d(line_width=1, alpha=.5, radius=1)
+            ax.add_collection3d(i)
+            return fig,
+
+        def animate(i):
+            # azimuth angle : 0 deg to 360 deg
+            ax.view_init(elev=10, azim=i * 4)
+            return fig,
+
+        # create animation using the animate() function with no repeat
+        # Animate
+        ani = animation.FuncAnimation(fig, animate, init_func=init_function,
+                                      frames=90, interval=50, blit=True)
+        fn = 'rotate_ico'
+        #ani.save(fn + '.mp4', writer='ffmpeg', fps=1000 / 50)
+        print(ani)
+        ani.save(fn + '.gif', writer='pillow', fps=1000 / 50)
+        plt.show()
+
     def test_draw_ico(self):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -14,7 +42,7 @@ class TestIco(TestCase):
         ax.set_ylim([-1, 1])
         ax.set_zlim([-1, 1])
         ax.axis("off")
-        i = Icosohedron_3d(line_width=1, alpha=.5,radius=1)
+        i = Icosohedron_3d(line_width=1, alpha=.5, radius=1)
         ax.add_collection3d(i)
         plt.show()
 
@@ -37,8 +65,23 @@ class TestIco(TestCase):
         perms = perms + list(permutations(a))
         perms = np.array(perms)
         print(perms)
-        ax.scatter(perms[:,0], perms[:,1], perms[:,2])
+        ax.set_xlim([-1, 1])
+        ax.set_ylim([-1, 1])
+        ax.set_zlim([-1, 1])
+        ax.axis("off")
+        #ax.scatter(perms[:,0], perms[:,1], perms[:,2])
         plt.show()
+
+    def test_draw_box(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.set_xlim([-5, 25])
+        ax.set_ylim([-5, 25])
+        ax.set_zlim([-5, 25])
+        i = Cube3d(line_width=1, alpha=.5)
+        ax.add_collection3d(i)
+        plt.show()
+
 
     def test_draw_cube(self):
         i = Icosahedron(position=[14, 3, 10], num_shells=1)

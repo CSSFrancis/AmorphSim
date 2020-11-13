@@ -1,7 +1,13 @@
 from diffpy.structure import Atom, Structure,Lattice
-from diffsims.generators import DiffractionGenerator
+from diffsims.generators.diffraction_generator import DiffractionGenerator
 import matplotlib.pyplot as plt
-
+import copy as copymod
+from diffpy.structure import Atom, Structure,Lattice
+from mpl_toolkits.mplot3d import Axes3D
+from AmorphSim.utils.rotation_utils import _rand_2d_rotation_matrix,_rand_3d_rotation_matrix, _get_points_on_sphere
+import os
+from AmorphSim.utils.vector_utils import rotation_matrix_from_vectors,_get_angle_between
+import numpy as np
 
 element_dict = {"H": 1, "He": 2, "Li": 3, "Be": 4, "B": 5, "C": 6, "N": 7, "O": 8,"F": 9, "Ne": 10,
                 "Na": 11, "Mg": 12, "Al": 13, "Si": 14, "P": 15, "S": 16, "Cl": 17, "Ar": 18, "K": 19,
@@ -179,21 +185,3 @@ class Cluster(Structure):
         angle = _get_angle_between(start,end)
         angles = np.linspace(0, angle,npts)
         vectors = [[np.cos(a), np.sin(a), 0] for a in angles]
-
-    def plot_reciprocal(self, resolution=100):
-        """Plots the reciprocal space  atoms of some structure in 3-D. Gives a voxel representation of
-        the space.
-        """
-
-        pass
-
-    def get_reciprocal_space(self, accelerating_voltage, resolution=100):
-        """Returns the three dimensional reciprocal space from some cluster where some cut along the
-        reciprocal space represents the kinetic diffraction along some direction. Creates a resolution^3
-        space
-        """
-        gen = DiffractionGenerator(accelerating_voltage)
-
-        pass
-    def draw(self):
-        return

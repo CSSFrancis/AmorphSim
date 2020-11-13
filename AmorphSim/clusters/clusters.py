@@ -1,6 +1,8 @@
-from AmorphSim.real_sim import Cluster
+from AmorphSim.sim.cluster import Cluster
 from AmorphSim.utils.structure_generators import _create_ico, _create_fcc,_create_bcc
 from AmorphSim.draw.draw_3d import Icosohedron_3d,FCC_3d
+from diffpy.structure import Lattice
+import numpy as np
 
 
 class Icosahedron(Cluster):
@@ -34,6 +36,7 @@ class Icosahedron(Cluster):
         for i in self.initial_atoms:
             self.append(i)
         self.radius = num_shells*shell_distance
+        self.lattice = Lattice(a=1,b=1,c=1,alpha=90, beta=90, gamma=90)
 
     def get_5_fold_axis(self, beam_direction=[0, 0, 1], reinitialize=True, inplace=True):
         """rotate the 5fold axes so that it is perpendicular to the beam direction [0,0,1]
