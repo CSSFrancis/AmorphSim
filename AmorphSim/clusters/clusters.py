@@ -36,7 +36,7 @@ class Icosahedron(Cluster):
         for i in self.initial_atoms:
             self.append(i)
         self.radius = num_shells*shell_distance
-        self.lattice = Lattice(a=1,b=1,c=1,alpha=90, beta=90, gamma=90)
+        self.lattice = Lattice(a=1, b=1, c=1, alpha=90, beta=90, gamma=90)
 
     def get_5_fold_axis(self, beam_direction=[0, 0, 1], reinitialize=True, inplace=True):
         """rotate the 5fold axes so that it is perpendicular to the beam direction [0,0,1]
@@ -167,64 +167,6 @@ class FCC(Cluster):
 
 class BCC(Cluster):
     def __init__(self, atom1="Fe", atom2="Fe", lattice_parameter=1, radius=1):
-        """
-        Parameters
-        ______________
-        atom_list: str or list
-            The element or elements of the cluster
-        lattice_parameter: float
-            The lattice parameter of the cluster
-        radius: float
-            The size of the cluster
-        """
-        super().__init__()
-        self.initial_atoms = _create_bcc(atom1=atom1,
-                                         atom2=atom2,
-                                         lattice_parameter=lattice_parameter,
-                                         size=radius)
-        for a in self.initial_atoms:
-            self.append(a)
-
-    def get_6_fold_axis(self, beam_direction=[0, 0, 1], reinitialize=True, inplace=True):
-        """rotate to 6-fold axes so that it is perpendicular to the beam direction [0,0,1]
-
-        Parameters
-        ------------
-        beam_direction: list
-            The beam direction to align the axis to
-        reinitialize: bool
-            Resets the atom positions so that the axes is aligned properly
-        inplace: bool
-            Should a copy be made or the cluster be directly operated on
-        """
-        if reinitialize:
-            self.reset_atoms()
-        return self.rotate_from_vectors(vector1=beam_direction,
-                                        vector2=[1, 1, 1],
-                                        inplace=inplace)
-
-    def get_4_fold_axis(self, beam_direction=[0, 0, 1], reinitialize=True, inplace=True):
-        """rotate to 4-fold axes so that it is perpendicular to the beam direction [0,0,1]
-
-        Parameters
-        ------------
-        beam_direction: list
-            The beam direction to align the axis to
-        reinitialize: bool
-            Resets the atom positions so that the axes is aligned properly
-        inplace: bool
-            Should a copy be made or the cluster be directly operated on
-        """
-        if reinitialize:
-            self.reset_atoms()
-        if inplace:
-            return None
-        else:
-            return self
-
-
-class BCC(Cluster):
-    def __init__(self, atom1="Fe", atom2="Fe", lattice_parameter=2.856, radius=3):
         """
         Parameters
         ______________

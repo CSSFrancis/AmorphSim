@@ -1,56 +1,30 @@
-from unittest import TestCase
+import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 import hyperspy.api as hs
-from AmorphSim.sim import Cluster, SimulationCube
-from AmorphSim.utils.rotation_utils import _rand_2d_rotation_matrix
-from mpl_toolkits.mplot3d import Axes3D
 
+import diffsims
+from diffsims.generators.diffraction_generator import AtomicDiffractionGenerator
+from AmorphSim.sim.simulation_cube import Cube
+from AmorphSim.clusters.clusters import FCC,Icosahedron
 
-class TestCluster(TestCase):
-    def setUp(self):
-        self.c = Cluster(symmetry=10, radius=.5, k=4.0, position=(1, 1))
+class TestSimulationCube:
 
-    def test_get_k_vectors(self):
+    @pytest.fixture
+    def sim_cube(self):
+        cube = Cube(dimensions=(200, 200, 20))
+        cube.add_cluster(Icosahedron(position=(100, 100, 10)))
+        cube.add_cluster(FCC(position=(120, 120, 10)))
+        return cube
 
-        self.c.rotation_2d = _rand_2d_rotation_matrix()
-        print(self.c.rotation_2d)
-        k = np.array(self.c.get_k_vectors())
-        plt.scatter(k[:,0], k[:,1])
+    def test_plot_3d(self, sim_cube):
+        sim_cube.plot_3d()
         plt.show()
 
-    def test_get_k_vectors_rot(self):
-        #self.c.rotation_3d = np.eye(3)
-        self.c.plane_direction=[1,1,1]
-        print(self.c.rotation_2d)
-        k = np.array(self.c.get_k_vectors())
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(k[:,0],k[:,1],k[:,2])
-        self.c.plane_direction = [1, -1, 1]
-        print(self.c.rotation_2d)
-        k = np.array(self.c.get_k_vectors())
-        ax.scatter(k[:, 0], k[:, 1], k[:, 2])
-        plt.show()
-
-    def test_get_diffraciton(self):
-        diff = self.c.get_diffraction(img_size=15.0)
-        plt.imshow(diff)
-        plt.show()
-
-class TestSimulationCube(TestCase):
-    def test_random_init(self):
-        cube = SimulationCube()
-        cube.add_random_clusters(100)
-        print(cube)
-
-    def test_ico_init(self):
-        cube = SimulationCube()
-        cube.add_icoso(1, radius_range=(4., 4.1))
-        stem = cube.get_4d_stem(noise=True,convolve=True)
-        stem.plot()
-        plt.show()
-        print(cube)
+    def test_to_xyz(self, sim_cube):
+        test_str = sim_cube.to_prismatic_xyz()
+        print(test_str)
+        test_str = sim_cube.to_prismatic_xyz(file="test_cube")
 
     def test_projection(self):
         cube = SimulationCube()
@@ -77,6 +51,7 @@ class TestSimulationCube(TestCase):
         stem = cube.get_4d_stem(noise=True, disorder=.05, convolve=True)
         stem.plot()
         plt.show()
+
 
 
 

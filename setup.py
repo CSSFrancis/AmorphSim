@@ -28,5 +28,6 @@ setup(name='AmorphSim',
                         'numpy>=1.10,!=1.70.0',
                         'matplotlib',
                         'scipy',
-                        'scikit-image'],
+                        'scikit-image',
+                        'diffsims'],
       zip_safe=False)

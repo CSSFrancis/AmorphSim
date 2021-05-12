@@ -17,10 +17,13 @@ element_dict = {"H": 1, "He": 2, "Li": 3, "Be": 4, "B": 5, "C": 6, "N": 7, "O": 
 
 class Cluster(Structure):
     """Each Cluster extends the Structure class
-     giving it access to the Strcuture class and
+     giving it access to the Structure class and
      the diffraction simulation capabilities of diffsims
     """
-    def __init__(self, position=[0,0,0]):
+    def __init__(self,
+                 position=[0,0,0]):
+        """Initializes some cluster at some position.
+        """
         self.initial_atoms = []
         self.position = position
 
@@ -75,6 +78,17 @@ class Cluster(Structure):
             M = _rand_3d_rotation_matrix()
             new = self.rotate_from_matrix(matrix=M, inplace=False)
             new.get_xyz(file=folder+"/"+str(i)+".xyz",scale=scale, offset=offset)
+
+    def get_simple_xyz(self):
+        newstr = ""
+        for atom in self:
+            newstr = newstr+(str(element_dict[atom.element]) + " " +
+                             str(atom.x+self.position[0]) + " " +
+                             str(atom.y+self.position[1]) + " " +
+                             str(atom.z+self.position[2]) + " " +
+                             str(atom.occupancy) + " " +
+                             str(0.0)+"\n")
+        return newstr
 
     def get_xyz(self, file=None, offset=[100, 100, 20], disorder=[0.05, 0.1, 0.15, 0.20, 0.25, 0.3], fp=5):
         """Get a series of xyz positions as a function of list of disorder parameters
