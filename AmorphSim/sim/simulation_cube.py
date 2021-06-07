@@ -2,7 +2,7 @@ from builtins import len
 
 import numpy as np
 import matplotlib.pyplot as plt
-from diffpy.structure import Atom, Structure,Lattice
+from diffpy.structure import Atom, Structure, Lattice
 from AmorphSim.draw.draw_3d import Cube3d
 
 
